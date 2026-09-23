@@ -6,6 +6,7 @@ export const SeleksiView: React.FC = () => {
   const {
     students,
     classes,
+    selectionCandidates,
     hasStudentVotedSelection,
     castSelectionVote,
     getClassById,
@@ -16,7 +17,7 @@ export const SeleksiView: React.FC = () => {
   const [voterSearch, setVoterSearch] = useState('');
   const [selectedVoterId, setSelectedVoterId] = useState<string>('');
 
-  // 3 Nominees state (Must be from Grade 7 or 8)
+  // 3 Nominees state (Must be from Grade 7 or 8 registered candidates)
   const [nominee1, setNominee1] = useState<string>('');
   const [nominee2, setNominee2] = useState<string>('');
   const [nominee3, setNominee3] = useState<string>('');
@@ -32,6 +33,21 @@ export const SeleksiView: React.FC = () => {
     ? selectedVoterClass.rombel.replace(/^[0-9]+/, '').trim().toUpperCase()
     : '';
 
+  // Active candidates registered by Admin
+  const activeCandidateRecords = useMemo(() => {
+    return selectionCandidates.filter((c) => c.is_active !== false);
+  }, [selectionCandidates]);
+
+  // Set of student IDs registered as active candidates by Admin
+  const activeCandidateStudentIds = useMemo(() => {
+    return new Set(activeCandidateRecords.map((c) => c.student_id));
+  }, [activeCandidateRecords]);
+
+  // Student list consisting strictly of candidates registered by Admin
+  const candidateStudents = useMemo(() => {
+    return students.filter((s) => activeCandidateStudentIds.has(s.id));
+  }, [students, activeCandidateStudentIds]);
+
   // Voters list for selected class
   const classVoters = useMemo(() => {
     return students.filter((s) => s.class_id === selectedVoterClassId);
@@ -44,42 +60,42 @@ export const SeleksiView: React.FC = () => {
     );
   }, [classVoters, voterSearch]);
 
-  // Pools filtered strictly according to validation rules:
+  // Pools filtered strictly from registered candidateStudents according to validation rules:
   const pool1 = useMemo(() => {
     if (!selectedVoterClass) return [];
     if (selectedVoterClass.grade === 7 || selectedVoterClass.grade === 8) {
-      // Pilihan 1: wajib dari kelasnya sendiri
-      return students.filter((s) => s.class_id === selectedVoterClass.id);
+      // Pilihan 1: wajib dari kandidat terdaftar di kelasnya sendiri
+      return candidateStudents.filter((s) => s.class_id === selectedVoterClass.id);
     }
     // Kelas 9: bebas kelas 7 & 8, tetapi HANYA rombel yang sama (9A -> 7A/8A, 9B -> 7B/8B)
-    return students.filter((s) => {
+    return candidateStudents.filter((s) => {
       const k = getClassById(s.class_id);
       if (!k || (k.grade !== 7 && k.grade !== 8)) return false;
       const r = k.rombel.replace(/^[0-9]+/, '').trim().toUpperCase();
       return r === voterRombelLetter;
     });
-  }, [selectedVoterClass, students, getClassById, voterRombelLetter]);
+  }, [selectedVoterClass, candidateStudents, getClassById, voterRombelLetter]);
 
   const pool2 = useMemo(() => {
     if (!selectedVoterClass) return [];
     if (selectedVoterClass.grade === 7 || selectedVoterClass.grade === 8) {
-      // Pilihan 2: wajib dari kelasnya sendiri
-      return students.filter((s) => s.class_id === selectedVoterClass.id);
+      // Pilihan 2: wajib dari kandidat terdaftar di kelasnya sendiri
+      return candidateStudents.filter((s) => s.class_id === selectedVoterClass.id);
     }
     // Kelas 9: bebas kelas 7 & 8, tetapi HANYA rombel yang sama (9A -> 7A/8A, 9B -> 7B/8B)
-    return students.filter((s) => {
+    return candidateStudents.filter((s) => {
       const k = getClassById(s.class_id);
       if (!k || (k.grade !== 7 && k.grade !== 8)) return false;
       const r = k.rombel.replace(/^[0-9]+/, '').trim().toUpperCase();
       return r === voterRombelLetter;
     });
-  }, [selectedVoterClass, students, getClassById, voterRombelLetter]);
+  }, [selectedVoterClass, candidateStudents, getClassById, voterRombelLetter]);
 
   const pool3 = useMemo(() => {
     if (!selectedVoterClass) return [];
     if (selectedVoterClass.grade === 7) {
-      // Pilihan 3: wajib dari kelas atasnya (kelas 8 sesuai rombel)
-      return students.filter((s) => {
+      // Pilihan 3: wajib dari kandidat terdaftar di kelas atasnya (kelas 8 sesuai rombel)
+      return candidateStudents.filter((s) => {
         const k = getClassById(s.class_id);
         if (!k || k.grade !== 8) return false;
         const r = k.rombel.replace(/^[0-9]+/, '').trim().toUpperCase();
@@ -87,8 +103,8 @@ export const SeleksiView: React.FC = () => {
       });
     }
     if (selectedVoterClass.grade === 8) {
-      // Pilihan 3: wajib dari kelas bawahnya (kelas 7 sesuai rombel)
-      return students.filter((s) => {
+      // Pilihan 3: wajib dari kandidat terdaftar di kelas bawahnya (kelas 7 sesuai rombel)
+      return candidateStudents.filter((s) => {
         const k = getClassById(s.class_id);
         if (!k || k.grade !== 7) return false;
         const r = k.rombel.replace(/^[0-9]+/, '').trim().toUpperCase();
@@ -96,13 +112,13 @@ export const SeleksiView: React.FC = () => {
       });
     }
     // Kelas 9: bebas kelas 7 & 8, tetapi HANYA rombel yang sama
-    return students.filter((s) => {
+    return candidateStudents.filter((s) => {
       const k = getClassById(s.class_id);
       if (!k || (k.grade !== 7 && k.grade !== 8)) return false;
       const r = k.rombel.replace(/^[0-9]+/, '').trim().toUpperCase();
       return r === voterRombelLetter;
     });
-  }, [selectedVoterClass, students, getClassById, voterRombelLetter]);
+  }, [selectedVoterClass, candidateStudents, getClassById, voterRombelLetter]);
 
   const handleVoterSelect = (voterId: string) => {
     setSelectedVoterId(voterId);
@@ -318,13 +334,15 @@ export const SeleksiView: React.FC = () => {
               <select
                 value={nominee1}
                 onChange={(e) => setNominee1(e.target.value)}
-                disabled={!selectedVoterId || selectedVoterHasVoted}
+                disabled={!selectedVoterId || selectedVoterHasVoted || pool1.length === 0}
                 required
                 className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
               >
                 <option value="">
                   {selectedVoterClass
-                    ? `-- Pilih Calon 1 (${selectedVoterClass.grade === 7 || selectedVoterClass.grade === 8 ? `Kelas ${selectedVoterClass.rombel}` : `Kelas 7${voterRombelLetter} / 8${voterRombelLetter}`}) --`
+                    ? pool1.length > 0
+                      ? `-- Pilih Bakal Calon 1 (${selectedVoterClass.grade === 7 || selectedVoterClass.grade === 8 ? `Kelas ${selectedVoterClass.rombel}` : `Kelas 7${voterRombelLetter} / 8${voterRombelLetter}`}) --`
+                      : '-- Belum ada kandidat terdaftar di kelas ini (Admin) --'
                     : '-- Pilih Siswa Pemilih Dahulu --'}
                 </option>
                 {pool1.map((cand) => {
@@ -332,7 +350,7 @@ export const SeleksiView: React.FC = () => {
                   const isTaken = cand.id === nominee2 || cand.id === nominee3;
                   return (
                     <option key={cand.id} value={cand.id} disabled={isTaken}>
-                      {cand.full_name} - Kelas {kls?.rombel} {isTaken ? '(Sudah Dipilih di Pilihan Lain)' : ''}
+                      {cand.full_name} - Kelas {kls?.rombel} {isTaken ? '(Sudah Dipilih)' : ''}
                     </option>
                   );
                 })}
@@ -355,13 +373,15 @@ export const SeleksiView: React.FC = () => {
               <select
                 value={nominee2}
                 onChange={(e) => setNominee2(e.target.value)}
-                disabled={!selectedVoterId || selectedVoterHasVoted}
+                disabled={!selectedVoterId || selectedVoterHasVoted || pool2.length === 0}
                 required
                 className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
               >
                 <option value="">
                   {selectedVoterClass
-                    ? `-- Pilih Calon 2 (${selectedVoterClass.grade === 7 || selectedVoterClass.grade === 8 ? `Kelas ${selectedVoterClass.rombel}` : `Kelas 7${voterRombelLetter} / 8${voterRombelLetter}`}) --`
+                    ? pool2.length > 0
+                      ? `-- Pilih Bakal Calon 2 (${selectedVoterClass.grade === 7 || selectedVoterClass.grade === 8 ? `Kelas ${selectedVoterClass.rombel}` : `Kelas 7${voterRombelLetter} / 8${voterRombelLetter}`}) --`
+                      : '-- Belum ada kandidat terdaftar di kelas ini (Admin) --'
                     : '-- Pilih Siswa Pemilih Dahulu --'}
                 </option>
                 {pool2.map((cand) => {
@@ -369,7 +389,7 @@ export const SeleksiView: React.FC = () => {
                   const isTaken = cand.id === nominee1 || cand.id === nominee3;
                   return (
                     <option key={cand.id} value={cand.id} disabled={isTaken}>
-                      {cand.full_name} - Kelas {kls?.rombel} {isTaken ? '(Sudah Dipilih di Pilihan Lain)' : ''}
+                      {cand.full_name} - Kelas {kls?.rombel} {isTaken ? '(Sudah Dipilih)' : ''}
                     </option>
                   );
                 })}
@@ -392,13 +412,15 @@ export const SeleksiView: React.FC = () => {
               <select
                 value={nominee3}
                 onChange={(e) => setNominee3(e.target.value)}
-                disabled={!selectedVoterId || selectedVoterHasVoted}
+                disabled={!selectedVoterId || selectedVoterHasVoted || pool3.length === 0}
                 required
                 className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded-lg p-2.5 focus:ring-2 focus:ring-emerald-500 focus:outline-none disabled:bg-slate-100 disabled:text-slate-400"
               >
                 <option value="">
                   {selectedVoterClass
-                    ? `-- Pilih Calon 3 (${selectedVoterClass.grade === 7 ? `Kelas 8${voterRombelLetter}` : selectedVoterClass.grade === 8 ? `Kelas 7${voterRombelLetter}` : `Kelas 7${voterRombelLetter} / 8${voterRombelLetter}`}) --`
+                    ? pool3.length > 0
+                      ? `-- Pilih Bakal Calon 3 (${selectedVoterClass.grade === 7 ? `Kelas 8${voterRombelLetter}` : selectedVoterClass.grade === 8 ? `Kelas 7${voterRombelLetter}` : `Kelas 7${voterRombelLetter} / 8${voterRombelLetter}`}) --`
+                      : '-- Belum ada kandidat terdaftar di kelas ini (Admin) --'
                     : '-- Pilih Siswa Pemilih Dahulu --'}
                 </option>
                 {pool3.map((cand) => {
@@ -406,7 +428,7 @@ export const SeleksiView: React.FC = () => {
                   const isTaken = cand.id === nominee1 || cand.id === nominee2;
                   return (
                     <option key={cand.id} value={cand.id} disabled={isTaken}>
-                      {cand.full_name} - Kelas {kls?.rombel} {isTaken ? '(Sudah Dipilih di Pilihan Lain)' : ''}
+                      {cand.full_name} - Kelas {kls?.rombel} {isTaken ? '(Sudah Dipilih)' : ''}
                     </option>
                   );
                 })}

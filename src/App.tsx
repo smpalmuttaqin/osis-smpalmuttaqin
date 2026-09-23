@@ -4,6 +4,7 @@ import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
 import { LoginView } from './components/LoginView';
 import { DashboardView } from './components/DashboardView';
+import { KandidatSeleksiView } from './components/KandidatSeleksiView';
 import { SeleksiView } from './components/SeleksiView';
 import { RekapSeleksiView } from './components/RekapSeleksiView';
 import { PlenoView } from './components/PlenoView';
@@ -81,6 +82,7 @@ const MainLayout: React.FC = () => {
             ) : (
               <>
                 {activePage === 'dashboard' && <DashboardView />}
+                {activePage === 'kandidat_seleksi' && <KandidatSeleksiView />}
                 {activePage === 'seleksi' && <SeleksiView />}
                 {activePage === 'rekap_seleksi' && <RekapSeleksiView />}
                 {activePage === 'pleno' && <PlenoView />}

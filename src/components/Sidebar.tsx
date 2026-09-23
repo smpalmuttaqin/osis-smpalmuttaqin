@@ -91,6 +91,13 @@ export const Sidebar: React.FC = () => {
       title: 'Tahapan Pemilihan',
       items: [
         {
+          id: 'kandidat_seleksi',
+          label: 'Kandidat Bakal Calon',
+          icon: Award,
+          // khusus admin untuk menginput dan mengelola bakal calon seleksi
+          allowedRoles: ['admin'],
+        },
+        {
           id: 'seleksi',
           label: 'Bilik Seleksi',
           icon: Vote,

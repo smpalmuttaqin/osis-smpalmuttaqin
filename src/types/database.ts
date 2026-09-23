@@ -44,6 +44,14 @@ export interface PlenoEvaluation {
   created_at: string;
 }
 
+export interface SelectionCandidate {
+  id: string; // UUID
+  student_id: string;
+  notes?: string;
+  is_active: boolean;
+  created_at: string;
+}
+
 export interface Candidate {
   id: number; // 1, 2, 3
   chairman_student_id: string;
@@ -66,6 +74,7 @@ export interface FinalVote {
 
 export type PageView =
   | 'dashboard'
+  | 'kandidat_seleksi'
   | 'seleksi'
   | 'rekap_seleksi'
   | 'pleno'

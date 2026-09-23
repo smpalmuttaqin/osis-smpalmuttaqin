@@ -1,4 +1,4 @@
-import { Role, User, Kelas, Student, SelectionVote, PlenoEvaluation, Candidate, VotingAttendance, FinalVote } from '../types/database';
+import { Role, User, Kelas, Student, SelectionCandidate, SelectionVote, PlenoEvaluation, Candidate, VotingAttendance, FinalVote } from '../types/database';
 
 export const INITIAL_ROLES: Role[] = [
   { id: 1, name: 'admin' },
@@ -175,6 +175,101 @@ export const INITIAL_STUDENTS: Student[] = [
   { id: 'std-9b-04', full_name: 'Ratu Bilqis Azzahro', class_id: 6, created_at: '2026-08-01T08:00:00Z' },
   { id: 'std-9b-05', full_name: 'Sultan Rafi Al-Ghifari', class_id: 6, created_at: '2026-08-01T08:00:00Z' },
   { id: 'std-9b-06', full_name: 'Vania Putri Kirana', class_id: 6, created_at: '2026-08-01T08:00:00Z' },
+];
+
+// Initial pre-registered candidate pool curated by Admin for Tahap 1 Seleksi
+export const INITIAL_SELECTION_CANDIDATES: SelectionCandidate[] = [
+  // Kelas 8A
+  {
+    id: 'sc-8a-01',
+    student_id: 'std-8a-01', // Bintang Arya Pradana
+    notes: 'Ketua Pramuka Penggalang, berwibawa, disiplin ibadah',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
+  {
+    id: 'sc-8a-02',
+    student_id: 'std-8a-02', // Nayla Zahrotun Nisa
+    notes: 'Peringkat 1 paralel, aktif forum debat dan pidato bahasa',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
+  {
+    id: 'sc-8a-03',
+    student_id: 'std-8a-03', // Fathurrahman Rasyid
+    notes: 'Koordinator kebersihan & tahfidz Quran kelas 8',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
+
+  // Kelas 8B
+  {
+    id: 'sc-8b-01',
+    student_id: 'std-8b-01', // Haidar Ali Al-Mansyur
+    notes: 'Hafalan Al-Quran 3 Juz, kepribadian tegas dan teladan',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
+  {
+    id: 'sc-8b-02',
+    student_id: 'std-8b-02', // Tiara Safitri Utami
+    notes: 'Penggerak bakti sosial santri & aktif di PMR',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
+  {
+    id: 'sc-8b-03',
+    student_id: 'std-8b-03', // Atharizz Calief Rahman
+    notes: 'Kreatif, juara lomba robotika & sains madrasah',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
+
+  // Kelas 7A
+  {
+    id: 'sc-7a-01',
+    student_id: 'std-7a-01', // Muhammad Farhan Al-Fatih
+    notes: 'Ketua kelas 7A, komunikatif, representatif kelas 7',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
+  {
+    id: 'sc-7a-02',
+    student_id: 'std-7a-02', // Aisyah Putri Azzahra
+    notes: 'Seksi keagamaan kelas 7A, santun dan rajin',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
+  {
+    id: 'sc-7a-03',
+    student_id: 'std-7a-03', // Danendra Raditya Pramono
+    notes: 'Aktif di divisi kesenian & kreasi santri',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
+
+  // Kelas 7B
+  {
+    id: 'sc-7b-01',
+    student_id: 'std-7b-01', // Zidan Ahmad Robbani
+    notes: 'Ketua kelas 7B, inisiator kegiatan ibadah bersama',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
+  {
+    id: 'sc-7b-02',
+    student_id: 'std-7b-02', // Annisa Larasati Wibowo
+    notes: 'Seksi mading & literasi sekolah, tertib administrasi',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
+  {
+    id: 'sc-7b-03',
+    student_id: 'std-7b-03', // Fatih Al-Ghifari
+    notes: 'Disiplin dan aktif di kegiatan kepanduan santri',
+    is_active: true,
+    created_at: '2026-08-05T08:00:00Z',
+  },
 ];
 
 // Seed initial votes for stage 1 (Seleksi) so that top 3 per rombel (7A, 7B, 8A, 8B) are immediately available

@@ -5,6 +5,7 @@ import {
   User,
   Kelas,
   Student,
+  SelectionCandidate,
   SelectionVote,
   PlenoEvaluation,
   Candidate,
@@ -17,6 +18,7 @@ import {
   INITIAL_CLASSES,
   INITIAL_USERS,
   INITIAL_STUDENTS,
+  INITIAL_SELECTION_CANDIDATES,
   INITIAL_SELECTION_VOTES,
   INITIAL_PLENO_EVALUATIONS,
   INITIAL_CANDIDATES,
@@ -67,6 +69,7 @@ interface AppContextType {
   users: User[];
   classes: Kelas[];
   students: Student[];
+  selectionCandidates: SelectionCandidate[];
   selectionVotes: SelectionVote[];
   plenoEvaluations: PlenoEvaluation[];
   candidates: Candidate[];
@@ -95,6 +98,23 @@ interface AppContextType {
   saveCandidate: (candidateId: number, chairmanStudentId: string, viceChairmanStudentId: string, visionMission: string) => void;
   checkInStudent: (studentId: string) => { success: boolean; error?: string };
   castFinalVote: (candidateId: number) => { success: boolean; error?: string };
+
+  // Bakal Calon Seleksi Management (Admin)
+  addSelectionCandidate: (
+    studentId: string,
+    notes?: string
+  ) => { success: boolean; error?: string };
+  addStudentAsSelectionCandidate: (
+    fullName: string,
+    classId: number,
+    notes?: string
+  ) => { success: boolean; error?: string };
+  updateSelectionCandidate: (id: string, updates: Partial<SelectionCandidate>) => void;
+  deleteSelectionCandidate: (id: string) => void;
+  bulkAddSelectionCandidates: (
+    studentIds: string[]
+  ) => { addedCount: number };
+  resetSelectionCandidates: () => void;
 
   // Data Management (Admin)
   addStudent: (fullName: string, classId: number) => void;
@@ -150,6 +170,7 @@ export const ROLE_PERMISSIONS: Record<
   admin: {
     allowedPages: [
       'dashboard',
+      'kandidat_seleksi',
       'seleksi',
       'rekap_seleksi',
       'pleno',
@@ -228,6 +249,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return saved ? JSON.parse(saved) : [];
   });
 
+  const [selectionCandidates, setSelectionCandidates] = useState<SelectionCandidate[]>(() => {
+    try {
+      const saved = localStorage.getItem(STORAGE_PREFIX + 'selectionCandidates');
+      return saved ? JSON.parse(saved) : INITIAL_SELECTION_CANDIDATES;
+    } catch {
+      return INITIAL_SELECTION_CANDIDATES;
+    }
+  });
+
   const [selectionVotes, setSelectionVotes] = useState<SelectionVote[]>(() => {
     const saved = localStorage.getItem(STORAGE_PREFIX + 'selectionVotes');
     return saved ? JSON.parse(saved) : [];
@@ -283,6 +313,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         classes,
         users,
         students,
+        selectionCandidates,
         candidates,
       });
       await checkSupabaseHealth();
@@ -303,13 +334,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (res.roles && res.roles.length > 0) setRoles(res.roles);
         if (res.classes && res.classes.length > 0) setClasses(res.classes);
         // Direct mirror of Supabase database rows
-        setUsers(res.users || []);
-        setStudents(res.students || []);
-        setCandidates(res.candidates || []);
-        setSelectionVotes(res.selectionVotes || []);
-        setPlenoEvaluations(res.plenoEvaluations || []);
-        setVotingAttendances(res.votingAttendances || []);
-        setFinalVotes(res.finalVotes || []);
+        if (res.users) setUsers(res.users);
+        if (res.students) setStudents(res.students);
+        if (res.selectionCandidates) setSelectionCandidates(res.selectionCandidates);
+        if (res.candidates) setCandidates(res.candidates);
+        if (res.selectionVotes) setSelectionVotes(res.selectionVotes);
+        if (res.plenoEvaluations) setPlenoEvaluations(res.plenoEvaluations);
+        if (res.votingAttendances) setVotingAttendances(res.votingAttendances);
+        if (res.finalVotes) setFinalVotes(res.finalVotes);
         return { success: true, message: 'Data disinkronkan langsung dengan isi database Supabase!' };
       }
       return { success: false, message: res.error || 'Tidak ada data di Supabase' };
@@ -345,6 +377,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     localStorage.setItem(STORAGE_PREFIX + 'students', JSON.stringify(students));
   }, [students]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_PREFIX + 'selectionCandidates', JSON.stringify(selectionCandidates));
+  }, [selectionCandidates]);
 
   useEffect(() => {
     localStorage.setItem(STORAGE_PREFIX + 'selectionVotes', JSON.stringify(selectionVotes));
@@ -657,6 +693,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       { name: 'Pilihan 3', student: choice3, kelas: c3Class },
     ];
 
+    // Verification: Calon wajib terdaftar dalam daftar bakal calon resmi yang diinput oleh Administrator
+    if (selectionCandidates.length > 0) {
+      for (const c of choices) {
+        const isRegistered = selectionCandidates.some(
+          (sc) => sc.student_id === c.student.id && sc.is_active !== false
+        );
+        if (!isRegistered) {
+          return {
+            success: false,
+            error: `Nama "${c.student.full_name}" bukan merupakan bakal calon resmi yang telah diinput/disetujui oleh Administrator.`,
+          };
+        }
+      }
+    }
+
     for (const c of choices) {
       const cRombelGroup = c.kelas.rombel.replace(/^[0-9]+/, '').trim().toUpperCase();
       if (cRombelGroup !== voterRombelGroup) {
@@ -900,11 +951,120 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const deleteStudent = (id: string) => {
     setStudents((prev) => prev.filter((s) => s.id !== id));
+    setSelectionCandidates((prev) => prev.filter((c) => c.student_id !== id));
 
     // Background sync to Supabase
     supabase.from('students').delete().eq('id', id).then(({ error }) => {
       if (error) console.warn('Supabase students delete:', error.message);
     });
+  };
+
+  // Selection Candidates (Bakal Calon) Management
+  const addSelectionCandidate = (
+    studentId: string,
+    notes: string = ''
+  ) => {
+    const student = students.find((s) => s.id === studentId);
+    if (!student) {
+      return { success: false, error: 'Data santri tidak ditemukan.' };
+    }
+    const alreadyExists = selectionCandidates.some((c) => c.student_id === studentId);
+    if (alreadyExists) {
+      return { success: false, error: `Santri "${student.full_name}" sudah terdaftar sebagai kandidat bakal calon.` };
+    }
+
+    const newCandidate: SelectionCandidate = {
+      id: generateUUID(),
+      student_id: studentId,
+      notes: notes.trim(),
+      is_active: true,
+      created_at: new Date().toISOString(),
+    };
+
+    setSelectionCandidates((prev) => [...prev, newCandidate]);
+    return { success: true };
+  };
+
+  const addStudentAsSelectionCandidate = (
+    fullName: string,
+    classId: number,
+    notes: string = ''
+  ) => {
+    const trimmed = fullName.trim();
+    if (!trimmed) {
+      return { success: false, error: 'Nama lengkap santri tidak boleh kosong.' };
+    }
+
+    const newStudentId = generateUUID();
+    const newStudent: Student = {
+      id: newStudentId,
+      full_name: trimmed,
+      class_id: classId,
+      created_at: new Date().toISOString(),
+    };
+
+    setStudents((prev) => [...prev, newStudent]);
+
+    // Background sync student to Supabase
+    supabase.from('students').insert({
+      id: newStudent.id,
+      full_name: newStudent.full_name,
+      class_id: newStudent.class_id,
+      created_at: newStudent.created_at,
+    }).then(({ error }) => {
+      if (error) console.warn('Supabase student insert:', error.message);
+    });
+
+    const newCandidate: SelectionCandidate = {
+      id: generateUUID(),
+      student_id: newStudentId,
+      notes: notes.trim(),
+      is_active: true,
+      created_at: new Date().toISOString(),
+    };
+
+    setSelectionCandidates((prev) => [...prev, newCandidate]);
+    return { success: true };
+  };
+
+  const updateSelectionCandidate = (id: string, updates: Partial<SelectionCandidate>) => {
+    setSelectionCandidates((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, ...updates } : c))
+    );
+  };
+
+  const deleteSelectionCandidate = (id: string) => {
+    setSelectionCandidates((prev) => prev.filter((c) => c.id !== id));
+  };
+
+  const bulkAddSelectionCandidates = (
+    studentIds: string[]
+  ) => {
+    let addedCount = 0;
+    setSelectionCandidates((prev) => {
+      const existingIds = new Set(prev.map((c) => c.student_id));
+      const newItems: SelectionCandidate[] = [];
+      for (const sid of studentIds) {
+        if (!existingIds.has(sid)) {
+          newItems.push({
+            id: generateUUID(),
+            student_id: sid,
+            notes: '',
+            is_active: true,
+            created_at: new Date().toISOString(),
+          });
+          existingIds.add(sid);
+          addedCount++;
+        }
+      }
+      return [...prev, ...newItems];
+    });
+    return { addedCount };
+  };
+
+  const resetSelectionCandidates = () => {
+    setSelectionCandidates(INITIAL_SELECTION_CANDIDATES);
+    localStorage.setItem(STORAGE_PREFIX + 'selectionCandidates', JSON.stringify(INITIAL_SELECTION_CANDIDATES));
   };
 
   const importStudentsAndClasses = async (
@@ -1088,12 +1248,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem(STORAGE_PREFIX + 'currentUser');
     localStorage.removeItem(STORAGE_PREFIX + 'users');
     localStorage.removeItem(STORAGE_PREFIX + 'students');
+    localStorage.removeItem(STORAGE_PREFIX + 'selectionCandidates');
     localStorage.removeItem(STORAGE_PREFIX + 'selectionVotes');
     localStorage.removeItem(STORAGE_PREFIX + 'plenoEvaluations');
     localStorage.removeItem(STORAGE_PREFIX + 'candidates');
     localStorage.removeItem(STORAGE_PREFIX + 'votingAttendances');
     localStorage.removeItem(STORAGE_PREFIX + 'finalVotes');
 
+    setSelectionCandidates(INITIAL_SELECTION_CANDIDATES);
     await loadDataFromSupabase();
     setCurrentUser(DEFAULT_ADMIN);
     setActivePage('dashboard');
@@ -1122,6 +1284,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         users,
         classes,
         students,
+        selectionCandidates,
         selectionVotes,
         plenoEvaluations,
         candidates,
@@ -1144,6 +1307,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         saveCandidate,
         checkInStudent,
         castFinalVote,
+        addSelectionCandidate,
+        addStudentAsSelectionCandidate,
+        updateSelectionCandidate,
+        deleteSelectionCandidate,
+        bulkAddSelectionCandidates,
+        resetSelectionCandidates,
         addStudent,
         updateStudent,
         deleteStudent,

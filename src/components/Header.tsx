@@ -23,6 +23,11 @@ export const Header: React.FC = () => {
           title: 'Dashboard Hasil & Statistik Real-Time',
           subtitle: 'Perolehan suara dan visualisasi grafik donat Pilketos SMP Al Muttaqin',
         };
+      case 'kandidat_seleksi':
+        return {
+          title: 'Kandidat Bakal Calon OSIS',
+          subtitle: 'Kelola daftar nama siswa kelas 7 & 8 yang berhak dipilih sebagai bakal calon pada Tahap Seleksi',
+        };
       case 'seleksi':
         return {
           title: 'Tahap 1: Bilik Pemilihan Bakal Calon',
