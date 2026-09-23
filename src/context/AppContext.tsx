@@ -381,26 +381,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Auto-check and auto-sync on mount
+  // Auto-check and auto-load on mount
   useEffect(() => {
     const initSupabase = async () => {
       const health = await checkSupabaseHealth();
       if (health && health.isConnected) {
-        // If database tables exist but are empty (0 rows in students or selection_candidates), seed default master data
-        const studentCount = health.tables?.students?.count || 0;
-        const candidateCount = health.tables?.selection_candidates?.count || 0;
-        if (studentCount === 0 || candidateCount === 0) {
-          await seedInitialDataToSupabase({
-            roles: INITIAL_ROLES,
-            classes: INITIAL_CLASSES,
-            users: INITIAL_USERS,
-            students: INITIAL_STUDENTS,
-            selectionCandidates: INITIAL_SELECTION_CANDIDATES,
-            candidates: INITIAL_CANDIDATES,
-          });
-        }
         await loadDataFromSupabase();
-        await checkSupabaseHealth();
       }
     };
     initSupabase();
