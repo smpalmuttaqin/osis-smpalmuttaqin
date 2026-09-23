@@ -1,0 +1,6 @@
+{
+  "name": "E-Pilketos SMP Al Muttaqin Kota Madiun",
+  "description": "Sistem Pemilihan Ketua & Wakil Ketua OSIS SMP Al Muttaqin Kota Madiun berbasis Multi-Role, Seleksi, Pleno Guru, dan Bilik Suara E-Voting.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

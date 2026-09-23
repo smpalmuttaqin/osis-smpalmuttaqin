@@ -1,0 +1,336 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" width="100%" height="100%">
+  <defs>
+    <!-- Filter for soft shadow if needed -->
+    <filter id="logoShadow" x="-5%" y="-5%" width="110%" height="110%" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0f172a" flood-opacity="0.1"/>
+    </filter>
+
+    <!-- Linear Gradient for Globe -->
+    <linearGradient id="globeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#93cbf5"/>
+      <stop offset="50%" stop-color="#70b5e8"/>
+      <stop offset="100%" stop-color="#5aa3db"/>
+    </linearGradient>
+
+    <!-- Gradient for Golden Rice/Padi -->
+    <linearGradient id="padiGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fef08a"/>
+      <stop offset="50%" stop-color="#eab308"/>
+      <stop offset="100%" stop-color="#ca8a04"/>
+    </linearGradient>
+
+    <!-- Path for curved ribbon text -->
+    <path id="ribbonTextPath" d="M 105 422 Q 250 445 395 422" fill="none" />
+  </defs>
+
+  <!-- 1. BINGKAI LUAR SEGI LIMA BERLEKUK (OUTER SCALLOPED CREST) -->
+  <!-- Outer stroke -->
+  <path d="M 250 8 
+           C 275 22, 335 38, 385 85
+           C 425 125, 450 165, 492 188
+           C 455 240, 430 295, 455 370
+           C 430 435, 385 475, 250 492
+           C 115 475, 70 435, 45 370
+           C 70 295, 45 240, 8 188
+           C 50 165, 75 125, 115 85
+           C 165 38, 225 22, 250 8 Z"
+        fill="#ffffff" stroke="#222222" stroke-width="7" stroke-linejoin="round" stroke-linecap="round" />
+
+  <!-- Inner parallel contour stroke -->
+  <path d="M 250 22
+           C 272 35, 328 50, 375 94
+           C 412 131, 436 168, 474 190
+           C 440 238, 417 290, 440 361
+           C 416 422, 374 460, 250 475
+           C 126 460, 84 422, 60 361
+           C 83 290, 60 238, 26 190
+           C 64 168, 88 131, 125 94
+           C 172 50, 228 35, 250 22 Z"
+        fill="none" stroke="#222222" stroke-width="2.5" stroke-linejoin="round" />
+
+  <!-- 2. ARABIC CALLIGRAPHY (معهد المتقين) -->
+  <g fill="#232323" stroke="#232323" stroke-width="0.5">
+    <!-- "Ma'had Al-Muttaqin" stylized Arabic calligraphy -->
+    <text x="250" y="118" font-family="'Traditional Arabic', 'Amiri', 'Scheherazade New', serif, 'Arial'" 
+          font-size="44" font-weight="bold" text-anchor="middle" letter-spacing="2">
+      معهد  المتقين
+    </text>
+  </g>
+
+  <!-- 3. GLOBE (BOLA DUNIA) -->
+  <g id="globeGroup">
+    <!-- Blue circle of the world -->
+    <circle cx="250" cy="275" r="130" fill="url(#globeGrad)" />
+
+    <!-- Simplified continent silhouettes on globe (White continents) -->
+    <!-- Eurasia / Asia & Middle East -->
+    <path d="M 210 185 
+             Q 230 170 260 175 
+             Q 290 165 315 180 
+             Q 340 200 350 230 
+             Q 345 255 320 255 
+             Q 300 240 280 250 
+             Q 260 240 250 255
+             Q 220 260 215 240
+             Q 195 245 190 225
+             Q 190 195 210 185 Z" fill="#ffffff" opacity="0.85" />
+
+    <!-- Africa & Indonesia archipelago touches -->
+    <path d="M 215 260 
+             Q 240 270 250 300 
+             Q 240 330 220 340 
+             Q 200 325 205 295 
+             Q 200 275 215 260 Z" fill="#ffffff" opacity="0.85" />
+
+    <path d="M 290 290 Q 320 295 330 320 Q 310 335 295 315 Z" fill="#ffffff" opacity="0.85" />
+    <path d="M 260 325 Q 285 325 280 340 Q 255 340 260 325 Z" fill="#ffffff" opacity="0.85" />
+
+    <!-- Globe grid lines (latitudes/longitudes subtle) -->
+    <ellipse cx="250" cy="275" rx="130" ry="50" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.3" />
+    <ellipse cx="250" cy="275" rx="65" ry="130" fill="none" stroke="#ffffff" stroke-width="1.2" opacity="0.3" />
+    <line x1="120" y1="275" x2="380" y2="275" stroke="#ffffff" stroke-width="1.2" opacity="0.3" />
+    <line x1="250" y1="145" x2="250" y2="405" stroke="#ffffff" stroke-width="1.2" opacity="0.3" />
+  </g>
+
+  <!-- 4. TANGKAI PADI (RICE STALK - LEFT) -->
+  <g id="padiStalk" stroke="#222222" stroke-width="1.6" stroke-linejoin="round">
+    <!-- Main stem arch -->
+    <path d="M 115 355 C 80 290, 85 220, 130 165" fill="none" stroke="#854d0e" stroke-width="3" />
+
+    <!-- Rice grains (biji-biji padi emas bersusun rapi) -->
+    <!-- Lower pairs -->
+    <path d="M 115 352 C 105 345, 95 348, 100 358 C 105 365, 115 362, 115 352 Z" fill="url(#padiGrad)" />
+    <path d="M 120 342 C 128 335, 135 340, 130 350 C 125 358, 118 352, 120 342 Z" fill="url(#padiGrad)" />
+
+    <path d="M 103 335 C 90 328, 85 335, 90 345 C 95 352, 105 348, 103 335 Z" fill="url(#padiGrad)" />
+    <path d="M 112 325 C 122 318, 128 325, 124 335 C 118 342, 110 335, 112 325 Z" fill="url(#padiGrad)" />
+
+    <path d="M 94 315 C 80 308, 75 315, 82 325 C 88 332, 98 328, 94 315 Z" fill="url(#padiGrad)" />
+    <path d="M 105 305 C 116 298, 122 305, 118 315 C 112 322, 104 315, 105 305 Z" fill="url(#padiGrad)" />
+
+    <path d="M 88 290 C 72 282, 70 292, 76 302 C 82 310, 92 304, 88 290 Z" fill="url(#padiGrad)" />
+    <path d="M 100 280 C 112 272, 118 280, 114 290 C 108 298, 98 290, 100 280 Z" fill="url(#padiGrad)" />
+
+    <path d="M 84 265 C 68 258, 66 268, 73 278 C 79 285, 88 278, 84 265 Z" fill="url(#padiGrad)" />
+    <path d="M 98 255 C 110 248, 116 255, 112 265 C 106 272, 96 265, 98 255 Z" fill="url(#padiGrad)" />
+
+    <path d="M 83 240 C 67 232, 65 242, 72 252 C 78 260, 88 252, 83 240 Z" fill="url(#padiGrad)" />
+    <path d="M 98 230 C 110 222, 116 230, 111 240 C 105 248, 96 240, 98 230 Z" fill="url(#padiGrad)" />
+
+    <path d="M 86 215 C 70 208, 70 218, 77 228 C 84 235, 92 228, 86 215 Z" fill="url(#padiGrad)" />
+    <path d="M 102 205 C 114 198, 120 205, 115 215 C 109 222, 100 215, 102 205 Z" fill="url(#padiGrad)" />
+
+    <!-- Upper grains curving inward -->
+    <path d="M 94 190 C 80 182, 82 192, 88 202 C 95 210, 102 202, 94 190 Z" fill="url(#padiGrad)" />
+    <path d="M 110 182 C 122 175, 128 182, 122 192 C 115 198, 108 190, 110 182 Z" fill="url(#padiGrad)" />
+
+    <path d="M 105 168 C 92 160, 95 170, 102 178 C 110 185, 116 178, 105 168 Z" fill="url(#padiGrad)" />
+    <path d="M 122 162 C 132 155, 138 162, 132 172 C 125 178, 118 170, 122 162 Z" fill="url(#padiGrad)" />
+
+    <!-- Tip grains -->
+    <path d="M 125 145 C 116 140, 115 150, 122 158 C 128 164, 134 156, 125 145 Z" fill="url(#padiGrad)" />
+    <path d="M 132 142 C 142 136, 146 144, 140 152 C 134 158, 128 150, 132 142 Z" fill="url(#padiGrad)" />
+  </g>
+
+  <!-- 5. TANGKAI KAPAS (COTTON STALK - RIGHT) -->
+  <g id="kapasStalk" stroke="#222222" stroke-width="1.8" stroke-linejoin="round">
+    <!-- Main stem arch -->
+    <path d="M 385 355 C 420 290, 415 220, 370 165" fill="none" stroke="#15803d" stroke-width="3" />
+
+    <!-- Cotton Boll 1 (bottom) -->
+    <g transform="translate(385, 340)">
+      <path d="M 0 0 C -12 -5, -15 -18, -4 -25 C 8 -30, 20 -20, 15 -8 Z" fill="#ffffff" />
+      <path d="M -8 -5 C -15 -15, -5 -25, 5 -20" fill="none" stroke="#222222" stroke-width="1.2" />
+      <path d="M -4 2 Q -2 -10 8 -4" fill="#22c55e" />
+    </g>
+
+    <!-- Cotton Boll 2 -->
+    <g transform="translate(405, 310)">
+      <circle cx="0" cy="0" r="11" fill="#ffffff" />
+      <circle cx="-6" cy="-4" r="8" fill="#ffffff" />
+      <circle cx="6" cy="-4" r="8" fill="#ffffff" />
+      <path d="M -10 5 C -8 12, 8 12, 10 5 C 4 2, -4 2, -10 5 Z" fill="#16a34a" />
+    </g>
+
+    <!-- Cotton Boll 3 -->
+    <g transform="translate(415, 275)">
+      <circle cx="0" cy="0" r="12" fill="#ffffff" />
+      <circle cx="-7" cy="-5" r="9" fill="#ffffff" />
+      <circle cx="7" cy="-5" r="9" fill="#ffffff" />
+      <circle cx="0" cy="-10" r="8" fill="#ffffff" />
+      <path d="M -12 6 C -10 14, 10 14, 12 6 C 5 3, -5 3, -12 6 Z" fill="#16a34a" />
+    </g>
+
+    <!-- Cotton Boll 4 -->
+    <g transform="translate(418, 235)">
+      <circle cx="0" cy="0" r="12" fill="#ffffff" />
+      <circle cx="-7" cy="-5" r="9" fill="#ffffff" />
+      <circle cx="7" cy="-5" r="9" fill="#ffffff" />
+      <circle cx="0" cy="-10" r="8" fill="#ffffff" />
+      <path d="M -12 6 C -10 14, 10 14, 12 6 C 5 3, -5 3, -12 6 Z" fill="#16a34a" />
+    </g>
+
+    <!-- Cotton Boll 5 -->
+    <g transform="translate(405, 200)">
+      <circle cx="0" cy="0" r="11" fill="#ffffff" />
+      <circle cx="-6" cy="-5" r="8" fill="#ffffff" />
+      <circle cx="6" cy="-5" r="8" fill="#ffffff" />
+      <path d="M -10 6 C -8 13, 8 13, 10 6 Z" fill="#16a34a" />
+    </g>
+
+    <!-- Cotton Boll 6 -->
+    <g transform="translate(385, 175)">
+      <circle cx="0" cy="0" r="10" fill="#ffffff" />
+      <circle cx="-5" cy="-4" r="7" fill="#ffffff" />
+      <circle cx="5" cy="-4" r="7" fill="#ffffff" />
+      <path d="M -9 5 C -7 11, 7 11, 9 5 Z" fill="#16a34a" />
+    </g>
+
+    <!-- Cotton Boll 7 (top tip) -->
+    <g transform="translate(365, 155)">
+      <circle cx="0" cy="0" r="9" fill="#ffffff" />
+      <circle cx="-4" cy="-4" r="6" fill="#ffffff" />
+      <circle cx="4" cy="-4" r="6" fill="#ffffff" />
+      <path d="M -8 4 C -6 9, 6 9, 8 4 Z" fill="#16a34a" />
+    </g>
+  </g>
+
+  <!-- 6. MASJID SILHOUETTE (BLACK MOSQUE ARCHITECTURE) -->
+  <g id="mosqueSilhouette" fill="#111111" stroke="#111111" stroke-width="0.5">
+    <!-- Main central dome -->
+    <path d="M 222 272 
+             C 222 225, 245 220, 250 215 
+             C 255 220, 278 225, 278 272 Z" />
+    <!-- Crescent finial on central dome -->
+    <path d="M 250 202 L 250 215 M 247 206 C 253 206 253 202 250 200 C 245 202 245 206 250 207 Z" stroke="#111111" stroke-width="2" />
+
+    <!-- Minaret (Tall, on the right) -->
+    <!-- Base shaft -->
+    <rect x="296" y="270" width="14" height="85" />
+    <!-- Middle shaft with striped window slits -->
+    <rect x="297" y="170" width="12" height="100" />
+    <!-- Lower balcony -->
+    <rect x="294" y="228" width="18" height="6" rx="1" />
+    <!-- Upper balcony -->
+    <rect x="294" y="165" width="18" height="6" rx="1" />
+    <!-- Lantern / top tier -->
+    <rect x="298" y="148" width="10" height="17" />
+    <!-- Minaret Dome & Spire -->
+    <path d="M 298 148 C 298 138, 303 134, 303 130 C 303 134, 308 138, 308 148 Z" />
+    <line x1="303" y1="130" x2="303" y2="122" stroke="#111111" stroke-width="2.5" />
+    <!-- Minaret white window cuts for crisp detail -->
+    <line x1="300" y1="178" x2="300" y2="192" stroke="#ffffff" stroke-width="1.8" />
+    <line x1="303" y1="178" x2="303" y2="192" stroke="#ffffff" stroke-width="1.8" />
+    <line x1="306" y1="178" x2="306" y2="192" stroke="#ffffff" stroke-width="1.8" />
+
+    <!-- Mosque building body & side wings -->
+    <!-- Central pavilion -->
+    <rect x="207" y="272" width="86" height="83" />
+    <!-- Left wing -->
+    <rect x="168" y="295" width="40" height="60" />
+    <path d="M 172 295 C 172 282, 185 280, 188 276 C 191 280, 204 282, 204 295 Z" />
+    <!-- Right wing -->
+    <rect x="292" y="295" width="40" height="60" />
+    <path d="M 295 295 C 295 282, 308 280, 311 276 C 314 280, 327 282, 327 295 Z" />
+
+    <!-- Islamic Arched Portals and Windows (White inlays) -->
+    <!-- Central Grand Gate -->
+    <path d="M 242 355 L 242 320 C 242 312, 258 312, 258 320 L 258 355 Z" fill="#ffffff" />
+    <!-- Left Arches -->
+    <path d="M 220 355 L 220 330 C 220 324, 232 324, 232 330 L 232 355 Z" fill="#ffffff" />
+    <path d="M 194 355 L 194 330 C 194 324, 206 324, 206 330 L 206 355 Z" fill="#ffffff" />
+    <path d="M 176 355 L 176 333 C 176 328, 186 328, 186 333 L 186 355 Z" fill="#ffffff" />
+    <!-- Right Arches -->
+    <path d="M 268 355 L 268 330 C 268 324, 280 324, 280 330 L 280 355 Z" fill="#ffffff" />
+    <path d="M 292 355 L 292 332 C 292 327, 302 327, 302 332 L 302 355 Z" fill="#ffffff" />
+    <path d="M 314 355 L 314 333 C 314 328, 324 328, 324 333 L 324 355 Z" fill="#ffffff" />
+
+    <!-- Upper row of arched windows / grill -->
+    <g fill="#ffffff">
+      <rect x="222" y="295" width="4" height="12" rx="1.5" />
+      <rect x="230" y="295" width="4" height="12" rx="1.5" />
+      <rect x="238" y="295" width="4" height="12" rx="1.5" />
+      <rect x="246" y="295" width="4" height="12" rx="1.5" />
+      <rect x="254" y="295" width="4" height="12" rx="1.5" />
+      <rect x="262" y="295" width="4" height="12" rx="1.5" />
+      <rect x="270" y="295" width="4" height="12" rx="1.5" />
+    </g>
+
+    <!-- Crenellations / parapet toothings -->
+    <g fill="#111111">
+      <rect x="168" y="291" width="6" height="4" />
+      <rect x="178" y="291" width="6" height="4" />
+      <rect x="188" y="291" width="6" height="4" />
+      <rect x="198" y="291" width="6" height="4" />
+      <rect x="210" y="268" width="6" height="4" />
+      <rect x="222" y="268" width="6" height="4" />
+      <rect x="268" y="268" width="6" height="4" />
+      <rect x="280" y="268" width="6" height="4" />
+      <rect x="294" y="291" width="6" height="4" />
+      <rect x="306" y="291" width="6" height="4" />
+      <rect x="318" y="291" width="6" height="4" />
+    </g>
+  </g>
+
+  <!-- 7. AL-QUR'AN TERBUKA (OPEN HOLY QURAN & REHAL STAND) -->
+  <g id="holyQuran" stroke="#222222" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Rehal wooden base support (bawah kitab) -->
+    <path d="M 120 375 L 145 355 L 355 355 L 380 375 Z" fill="#ffffff" />
+    <path d="M 145 355 L 165 325 L 245 355 Z" fill="#ffffff" />
+    <path d="M 355 355 L 335 325 L 255 355 Z" fill="#ffffff" />
+
+    <!-- Open book pages (Lembaran kitab suci yang terbuka melengkung anggun) -->
+    <!-- Left page block -->
+    <path d="M 250 380 
+             C 210 365, 160 370, 140 375 
+             L 165 328 
+             C 190 322, 225 324, 250 338 Z" fill="#ffffff" />
+
+    <!-- Right page block -->
+    <path d="M 250 380 
+             C 290 365, 340 370, 360 375 
+             L 335 328 
+             C 310 322, 275 324, 250 338 Z" fill="#ffffff" />
+
+    <!-- Book spine center fold -->
+    <line x1="250" y1="338" x2="250" y2="384" stroke="#222222" stroke-width="3" />
+
+    <!-- Internal page text lines simulation (subtle) -->
+    <path d="M 175 340 Q 210 333 242 345" fill="none" stroke="#64748b" stroke-width="1.2" />
+    <path d="M 170 350 Q 208 343 242 355" fill="none" stroke="#64748b" stroke-width="1.2" />
+    <path d="M 165 360 Q 205 353 242 365" fill="none" stroke="#64748b" stroke-width="1.2" />
+
+    <path d="M 258 345 Q 290 333 325 340" fill="none" stroke="#64748b" stroke-width="1.2" />
+    <path d="M 258 355 Q 292 343 330 350" fill="none" stroke="#64748b" stroke-width="1.2" />
+    <path d="M 258 365 Q 295 353 335 360" fill="none" stroke="#64748b" stroke-width="1.2" />
+  </g>
+
+  <!-- 8. PITA LENGKUNG (BANNER RIBBON) & TEXT "Pondok Pesantren Al Muttaqin" -->
+  <g id="bannerRibbon" stroke="#222222" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round">
+    <!-- Ribbon fold tails (Left & Right) -->
+    <!-- Left tail fold -->
+    <path d="M 85 405 L 120 395 L 110 422 L 78 426 Z" fill="#ffffff" />
+    <path d="M 78 426 L 95 415 L 85 405 Z" fill="#f1f5f9" />
+    <!-- Right tail fold -->
+    <path d="M 415 405 L 380 395 L 390 422 L 422 426 Z" fill="#ffffff" />
+    <path d="M 422 426 L 405 415 L 415 405 Z" fill="#f1f5f9" />
+
+    <!-- Main arched front ribbon -->
+    <path d="M 105 416 
+             C 160 442, 340 442, 395 416 
+             L 403 450 
+             C 340 480, 160 480, 97 450 Z" 
+          fill="#ffffff" stroke="#222222" stroke-width="3" />
+
+    <!-- Inner double line accent on ribbon -->
+    <path d="M 108 422 C 162 447, 338 447, 392 422" fill="none" stroke="#222222" stroke-width="1" />
+    <path d="M 102 444 C 162 473, 338 473, 398 444" fill="none" stroke="#222222" stroke-width="1" />
+  </g>
+
+  <!-- Ribbon Text: "Pondok Pesantren Al Muttaqin" -->
+  <text font-family="'Arial', 'Helvetica', sans-serif" font-weight="900" font-size="20" fill="#111111" letter-spacing="0.5">
+    <textPath href="#ribbonTextPath" startOffset="50%" text-anchor="middle">
+      Pondok Pesantren Al Muttaqin
+    </textPath>
+  </text>
+</svg>
