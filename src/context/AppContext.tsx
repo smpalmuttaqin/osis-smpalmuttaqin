@@ -103,23 +103,23 @@ interface AppContextType {
   addSelectionCandidate: (
     studentId: string,
     notes?: string
-  ) => { success: boolean; error?: string };
+  ) => Promise<{ success: boolean; error?: string }>;
   addStudentAsSelectionCandidate: (
     fullName: string,
     classId: number,
     notes?: string
-  ) => { success: boolean; error?: string };
-  updateSelectionCandidate: (id: string, updates: Partial<SelectionCandidate>) => void;
-  deleteSelectionCandidate: (id: string) => void;
+  ) => Promise<{ success: boolean; error?: string }>;
+  updateSelectionCandidate: (id: string, updates: Partial<SelectionCandidate>) => Promise<void> | void;
+  deleteSelectionCandidate: (id: string) => Promise<void> | void;
   bulkAddSelectionCandidates: (
     studentIds: string[]
-  ) => { addedCount: number };
-  resetSelectionCandidates: () => void;
+  ) => Promise<{ addedCount: number }>;
+  resetSelectionCandidates: () => Promise<void> | void;
 
   // Data Management (Admin)
-  addStudent: (fullName: string, classId: number) => void;
-  updateStudent: (id: string, fullName: string, classId: number) => void;
-  deleteStudent: (id: string) => void;
+  addStudent: (fullName: string, classId: number) => Promise<void> | void;
+  updateStudent: (id: string, fullName: string, classId: number) => Promise<void> | void;
+  deleteStudent: (id: string) => Promise<void> | void;
   importStudentsAndClasses: (
     items: { fullName: string; rombel: string; grade: 7 | 8 | 9 }[],
     mode: 'append' | 'replace'
@@ -240,13 +240,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [classes, setClasses] = useState<Kelas[]>(INITIAL_CLASSES);
 
   const [users, setUsers] = useState<User[]>(() => {
-    const saved = localStorage.getItem(STORAGE_PREFIX + 'users');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(STORAGE_PREFIX + 'users');
+      return saved ? JSON.parse(saved) : INITIAL_USERS;
+    } catch {
+      return INITIAL_USERS;
+    }
   });
 
   const [students, setStudents] = useState<Student[]>(() => {
-    const saved = localStorage.getItem(STORAGE_PREFIX + 'students');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(STORAGE_PREFIX + 'students');
+      return saved ? JSON.parse(saved) : INITIAL_STUDENTS;
+    } catch {
+      return INITIAL_STUDENTS;
+    }
   });
 
   const [selectionCandidates, setSelectionCandidates] = useState<SelectionCandidate[]>(() => {
@@ -259,28 +267,48 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [selectionVotes, setSelectionVotes] = useState<SelectionVote[]>(() => {
-    const saved = localStorage.getItem(STORAGE_PREFIX + 'selectionVotes');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(STORAGE_PREFIX + 'selectionVotes');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   const [plenoEvaluations, setPlenoEvaluations] = useState<PlenoEvaluation[]>(() => {
-    const saved = localStorage.getItem(STORAGE_PREFIX + 'plenoEvaluations');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(STORAGE_PREFIX + 'plenoEvaluations');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   const [candidates, setCandidates] = useState<Candidate[]>(() => {
-    const saved = localStorage.getItem(STORAGE_PREFIX + 'candidates');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(STORAGE_PREFIX + 'candidates');
+      return saved ? JSON.parse(saved) : INITIAL_CANDIDATES;
+    } catch {
+      return INITIAL_CANDIDATES;
+    }
   });
 
   const [votingAttendances, setVotingAttendances] = useState<VotingAttendance[]>(() => {
-    const saved = localStorage.getItem(STORAGE_PREFIX + 'votingAttendances');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(STORAGE_PREFIX + 'votingAttendances');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   const [finalVotes, setFinalVotes] = useState<FinalVote[]>(() => {
-    const saved = localStorage.getItem(STORAGE_PREFIX + 'finalVotes');
-    return saved ? JSON.parse(saved) : [];
+    try {
+      const saved = localStorage.getItem(STORAGE_PREFIX + 'finalVotes');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
   });
 
   // Supabase State
@@ -309,12 +337,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsSyncingWithSupabase(true);
     try {
       const res = await seedInitialDataToSupabase({
-        roles,
-        classes,
-        users,
-        students,
-        selectionCandidates,
-        candidates,
+        roles: roles.length > 0 ? roles : INITIAL_ROLES,
+        classes: classes.length > 0 ? classes : INITIAL_CLASSES,
+        users: users.length > 0 ? users : INITIAL_USERS,
+        students: students.length > 0 ? students : INITIAL_STUDENTS,
+        selectionCandidates: selectionCandidates.length > 0 ? selectionCandidates : INITIAL_SELECTION_CANDIDATES,
+        candidates: candidates.length > 0 ? candidates : INITIAL_CANDIDATES,
       });
       await checkSupabaseHealth();
       return res;
@@ -333,15 +361,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (res.success) {
         if (res.roles && res.roles.length > 0) setRoles(res.roles);
         if (res.classes && res.classes.length > 0) setClasses(res.classes);
-        // Direct mirror of Supabase database rows
-        if (res.users) setUsers(res.users);
-        if (res.students) setStudents(res.students);
-        if (res.selectionCandidates) setSelectionCandidates(res.selectionCandidates);
-        if (res.candidates) setCandidates(res.candidates);
-        if (res.selectionVotes) setSelectionVotes(res.selectionVotes);
-        if (res.plenoEvaluations) setPlenoEvaluations(res.plenoEvaluations);
-        if (res.votingAttendances) setVotingAttendances(res.votingAttendances);
-        if (res.finalVotes) setFinalVotes(res.finalVotes);
+        if (res.users && res.users.length > 0) setUsers(res.users);
+        if (res.students !== null && res.students !== undefined) setStudents(res.students);
+        if (res.selectionCandidates !== null && res.selectionCandidates !== undefined) {
+          setSelectionCandidates(res.selectionCandidates);
+        }
+        if (res.candidates !== null && res.candidates !== undefined) setCandidates(res.candidates);
+        if (res.selectionVotes !== null && res.selectionVotes !== undefined) setSelectionVotes(res.selectionVotes);
+        if (res.plenoEvaluations !== null && res.plenoEvaluations !== undefined) setPlenoEvaluations(res.plenoEvaluations);
+        if (res.votingAttendances !== null && res.votingAttendances !== undefined) setVotingAttendances(res.votingAttendances);
+        if (res.finalVotes !== null && res.finalVotes !== undefined) setFinalVotes(res.finalVotes);
         return { success: true, message: 'Data disinkronkan langsung dengan isi database Supabase!' };
       }
       return { success: false, message: res.error || 'Tidak ada data di Supabase' };
@@ -352,11 +381,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Auto-check and auto-load on mount
+  // Auto-check and auto-sync on mount
   useEffect(() => {
     const initSupabase = async () => {
-      await checkSupabaseHealth();
-      await loadDataFromSupabase();
+      const health = await checkSupabaseHealth();
+      if (health && health.isConnected) {
+        // If database tables exist but are empty (0 rows in students or selection_candidates), seed default master data
+        const studentCount = health.tables?.students?.count || 0;
+        const candidateCount = health.tables?.selection_candidates?.count || 0;
+        if (studentCount === 0 || candidateCount === 0) {
+          await seedInitialDataToSupabase({
+            roles: INITIAL_ROLES,
+            classes: INITIAL_CLASSES,
+            users: INITIAL_USERS,
+            students: INITIAL_STUDENTS,
+            selectionCandidates: INITIAL_SELECTION_CANDIDATES,
+            candidates: INITIAL_CANDIDATES,
+          });
+        }
+        await loadDataFromSupabase();
+        await checkSupabaseHealth();
+      }
     };
     initSupabase();
   }, []);
@@ -915,7 +960,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return { success: true };
   };
 
-  const addStudent = (fullName: string, classId: number) => {
+  const addStudent = async (fullName: string, classId: number) => {
     const newStudent: Student = {
       id: generateUUID(),
       full_name: fullName.trim(),
@@ -924,46 +969,57 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
     setStudents((prev) => [...prev, newStudent]);
 
-    // Background sync to Supabase
-    supabase.from('students').insert({
-      id: newStudent.id,
-      full_name: newStudent.full_name,
-      class_id: newStudent.class_id,
-      created_at: newStudent.created_at,
-    }).then(({ error }) => {
+    try {
+      const { error } = await supabase.from('students').insert({
+        id: newStudent.id,
+        full_name: newStudent.full_name,
+        class_id: newStudent.class_id,
+        created_at: newStudent.created_at,
+      });
       if (error) console.warn('Supabase students insert:', error.message);
-    });
+    } catch (err: any) {
+      console.warn('Supabase students insert exception:', err?.message);
+    }
   };
 
-  const updateStudent = (id: string, fullName: string, classId: number) => {
+  const updateStudent = async (id: string, fullName: string, classId: number) => {
     setStudents((prev) =>
       prev.map((s) => (s.id === id ? { ...s, full_name: fullName.trim(), class_id: classId } : s))
     );
 
-    // Background sync to Supabase
-    supabase.from('students').update({
-      full_name: fullName.trim(),
-      class_id: classId,
-    }).eq('id', id).then(({ error }) => {
+    try {
+      const { error } = await supabase
+        .from('students')
+        .update({
+          full_name: fullName.trim(),
+          class_id: classId,
+        })
+        .eq('id', id);
       if (error) console.warn('Supabase students update:', error.message);
-    });
+    } catch (err: any) {
+      console.warn('Supabase students update exception:', err?.message);
+    }
   };
 
-  const deleteStudent = (id: string) => {
+  const deleteStudent = async (id: string) => {
     setStudents((prev) => prev.filter((s) => s.id !== id));
     setSelectionCandidates((prev) => prev.filter((c) => c.student_id !== id));
 
-    // Background sync to Supabase
-    supabase.from('students').delete().eq('id', id).then(({ error }) => {
+    try {
+      // First delete associated selection candidate if any
+      await supabase.from('selection_candidates').delete().eq('student_id', id);
+      const { error } = await supabase.from('students').delete().eq('id', id);
       if (error) console.warn('Supabase students delete:', error.message);
-    });
+    } catch (err: any) {
+      console.warn('Supabase students delete exception:', err?.message);
+    }
   };
 
   // Selection Candidates (Bakal Calon) Management
-  const addSelectionCandidate = (
+  const addSelectionCandidate = async (
     studentId: string,
     notes: string = ''
-  ) => {
+  ): Promise<{ success: boolean; error?: string }> => {
     const student = students.find((s) => s.id === studentId);
     if (!student) {
       return { success: false, error: 'Data santri tidak ditemukan.' };
@@ -982,14 +1038,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setSelectionCandidates((prev) => [...prev, newCandidate]);
+
+    try {
+      // Delete any pre-existing record with same student_id to prevent duplicates
+      await supabase.from('selection_candidates').delete().eq('student_id', studentId);
+      const { error } = await supabase.from('selection_candidates').insert({
+        id: newCandidate.id,
+        student_id: newCandidate.student_id,
+        notes: newCandidate.notes,
+        is_active: newCandidate.is_active,
+        created_at: newCandidate.created_at,
+      });
+      if (error) {
+        console.warn('Supabase selection_candidates insert error:', error.message);
+      }
+    } catch (err: any) {
+      console.warn('Supabase insert candidate exception:', err?.message);
+    }
+
     return { success: true };
   };
 
-  const addStudentAsSelectionCandidate = (
+  const addStudentAsSelectionCandidate = async (
     fullName: string,
     classId: number,
     notes: string = ''
-  ) => {
+  ): Promise<{ success: boolean; error?: string }> => {
     const trimmed = fullName.trim();
     if (!trimmed) {
       return { success: false, error: 'Nama lengkap santri tidak boleh kosong.' };
@@ -1005,16 +1079,6 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     setStudents((prev) => [...prev, newStudent]);
 
-    // Background sync student to Supabase
-    supabase.from('students').insert({
-      id: newStudent.id,
-      full_name: newStudent.full_name,
-      class_id: newStudent.class_id,
-      created_at: newStudent.created_at,
-    }).then(({ error }) => {
-      if (error) console.warn('Supabase student insert:', error.message);
-    });
-
     const newCandidate: SelectionCandidate = {
       id: generateUUID(),
       student_id: newStudentId,
@@ -1024,47 +1088,128 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setSelectionCandidates((prev) => [...prev, newCandidate]);
+
+    try {
+      // Insert student first
+      await supabase.from('students').insert({
+        id: newStudent.id,
+        full_name: newStudent.full_name,
+        class_id: newStudent.class_id,
+        created_at: newStudent.created_at,
+      });
+
+      // Insert candidate
+      await supabase.from('selection_candidates').insert({
+        id: newCandidate.id,
+        student_id: newCandidate.student_id,
+        notes: newCandidate.notes,
+        is_active: newCandidate.is_active,
+        created_at: newCandidate.created_at,
+      });
+    } catch (err: any) {
+      console.warn('Supabase addStudentAsSelectionCandidate error:', err?.message);
+    }
+
     return { success: true };
   };
 
-  const updateSelectionCandidate = (id: string, updates: Partial<SelectionCandidate>) => {
+  const updateSelectionCandidate = async (id: string, updates: Partial<SelectionCandidate>) => {
     setSelectionCandidates((prev) =>
       prev.map((c) => (c.id === id ? { ...c, ...updates } : c))
     );
+
+    try {
+      const { error } = await supabase
+        .from('selection_candidates')
+        .update(updates)
+        .eq('id', id);
+      if (error) console.warn('Supabase selection_candidates update:', error.message);
+    } catch (err: any) {
+      console.warn('Supabase selection_candidates update exception:', err?.message);
+    }
   };
 
-  const deleteSelectionCandidate = (id: string) => {
+  const deleteSelectionCandidate = async (id: string) => {
+    const cand = selectionCandidates.find((c) => c.id === id);
+    const candStudentId = cand?.student_id;
+
     setSelectionCandidates((prev) => prev.filter((c) => c.id !== id));
+
+    try {
+      if (candStudentId) {
+        await supabase
+          .from('selection_candidates')
+          .delete()
+          .or(`id.eq.${id},student_id.eq.${candStudentId}`);
+      } else {
+        await supabase.from('selection_candidates').delete().eq('id', id);
+      }
+    } catch (err: any) {
+      console.warn('Supabase selection_candidates delete exception:', err?.message);
+    }
   };
 
-  const bulkAddSelectionCandidates = (
+  const bulkAddSelectionCandidates = async (
     studentIds: string[]
-  ) => {
+  ): Promise<{ addedCount: number }> => {
     let addedCount = 0;
+    const newItems: SelectionCandidate[] = [];
     setSelectionCandidates((prev) => {
       const existingIds = new Set(prev.map((c) => c.student_id));
-      const newItems: SelectionCandidate[] = [];
       for (const sid of studentIds) {
         if (!existingIds.has(sid)) {
-          newItems.push({
+          const item: SelectionCandidate = {
             id: generateUUID(),
             student_id: sid,
             notes: '',
             is_active: true,
             created_at: new Date().toISOString(),
-          });
+          };
+          newItems.push(item);
           existingIds.add(sid);
           addedCount++;
         }
       }
       return [...prev, ...newItems];
     });
+
+    if (newItems.length > 0) {
+      try {
+        for (const item of newItems) {
+          await supabase.from('selection_candidates').delete().eq('student_id', item.student_id);
+          await supabase.from('selection_candidates').insert({
+            id: item.id,
+            student_id: item.student_id,
+            notes: item.notes,
+            is_active: item.is_active,
+            created_at: item.created_at,
+          });
+        }
+      } catch (err: any) {
+        console.warn('Supabase bulk selection_candidates insert:', err?.message);
+      }
+    }
+
     return { addedCount };
   };
 
-  const resetSelectionCandidates = () => {
+  const resetSelectionCandidates = async () => {
     setSelectionCandidates(INITIAL_SELECTION_CANDIDATES);
     localStorage.setItem(STORAGE_PREFIX + 'selectionCandidates', JSON.stringify(INITIAL_SELECTION_CANDIDATES));
+    try {
+      await supabase.from('selection_candidates').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      await supabase.from('selection_candidates').insert(
+        INITIAL_SELECTION_CANDIDATES.map((sc) => ({
+          id: sc.id,
+          student_id: sc.student_id,
+          notes: sc.notes || '',
+          is_active: sc.is_active,
+          created_at: sc.created_at,
+        }))
+      );
+    } catch (err: any) {
+      console.warn('Supabase resetSelectionCandidates error:', err?.message);
+    }
   };
 
   const importStudentsAndClasses = async (
@@ -1255,8 +1400,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.removeItem(STORAGE_PREFIX + 'votingAttendances');
     localStorage.removeItem(STORAGE_PREFIX + 'finalVotes');
 
+    setRoles(INITIAL_ROLES);
+    setClasses(INITIAL_CLASSES);
+    setUsers(INITIAL_USERS);
+    setStudents(INITIAL_STUDENTS);
     setSelectionCandidates(INITIAL_SELECTION_CANDIDATES);
-    await loadDataFromSupabase();
+    setCandidates(INITIAL_CANDIDATES);
+    setSelectionVotes([]);
+    setPlenoEvaluations([]);
+    setVotingAttendances([]);
+    setFinalVotes([]);
+
+    await seedInitialDataToSupabase({
+      roles: INITIAL_ROLES,
+      classes: INITIAL_CLASSES,
+      users: INITIAL_USERS,
+      students: INITIAL_STUDENTS,
+      selectionCandidates: INITIAL_SELECTION_CANDIDATES,
+      candidates: INITIAL_CANDIDATES,
+    });
+    await checkSupabaseHealth();
     setCurrentUser(DEFAULT_ADMIN);
     setActivePage('dashboard');
   };

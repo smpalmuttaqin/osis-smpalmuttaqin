@@ -161,16 +161,16 @@ export const KandidatSeleksiView: React.FC = () => {
   }, [selectionCandidates, enrichedCandidates]);
 
   // Handle Single Add
-  const handleSingleAdd = (e: React.FormEvent) => {
+  const handleSingleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStudentId) {
       showNotification('error', 'Mohon pilih santri terlebih dahulu.');
       return;
     }
 
-    const res = addSelectionCandidate(selectedStudentId, candidateNotes);
+    const res = await addSelectionCandidate(selectedStudentId, candidateNotes);
     if (res.success) {
-      showNotification('success', 'Bakal calon berhasil ditambahkan.');
+      showNotification('success', 'Bakal calon berhasil ditambahkan ke database.');
       setSelectedStudentId('');
       setCandidateNotes('');
       setIsAddModalOpen(false);
@@ -180,16 +180,16 @@ export const KandidatSeleksiView: React.FC = () => {
   };
 
   // Handle New Student Add
-  const handleNewStudentAdd = (e: React.FormEvent) => {
+  const handleNewStudentAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStudentName.trim()) {
       showNotification('error', 'Nama santri tidak boleh kosong.');
       return;
     }
 
-    const res = addStudentAsSelectionCandidate(newStudentName, newStudentClassId, candidateNotes);
+    const res = await addStudentAsSelectionCandidate(newStudentName, newStudentClassId, candidateNotes);
     if (res.success) {
-      showNotification('success', `Santri "${newStudentName.trim()}" berhasil didaftarkan dan dimasukkan ke daftar bakal calon.`);
+      showNotification('success', `Santri "${newStudentName.trim()}" berhasil didaftarkan dan dimasukkan ke daftar bakal calon database.`);
       setNewStudentName('');
       setCandidateNotes('');
       setIsAddModalOpen(false);
@@ -199,46 +199,46 @@ export const KandidatSeleksiView: React.FC = () => {
   };
 
   // Handle Bulk Add
-  const handleBulkAdd = (e: React.FormEvent) => {
+  const handleBulkAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (bulkSelectedStudentIds.length === 0) {
       showNotification('error', 'Pilih minimal satu santri untuk ditambahkan.');
       return;
     }
 
-    const res = bulkAddSelectionCandidates(bulkSelectedStudentIds);
-    showNotification('success', `Berhasil menambahkan ${res.addedCount} santri sebagai bakal calon.`);
+    const res = await bulkAddSelectionCandidates(bulkSelectedStudentIds);
+    showNotification('success', `Berhasil menambahkan ${res.addedCount} santri sebagai bakal calon ke database.`);
     setBulkSelectedStudentIds([]);
     setIsAddModalOpen(false);
   };
 
   // Handle Edit Submit
-  const handleEditSubmit = (e: React.FormEvent) => {
+  const handleEditSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCandidate) return;
 
-    updateSelectionCandidate(editingCandidate.id, {
+    await updateSelectionCandidate(editingCandidate.id, {
       notes: editNotes.trim(),
       is_active: editIsActive,
     });
 
-    showNotification('success', 'Data bakal calon berhasil diperbarui.');
+    showNotification('success', 'Data bakal calon berhasil diperbarui di database.');
     setEditingCandidate(null);
   };
 
   // Handle Delete Candidate
-  const handleDeleteCandidate = (candId: string, studentName?: string) => {
+  const handleDeleteCandidate = async (candId: string, studentName?: string) => {
     if (confirm(`Hapus "${studentName || 'Bakal calon'}" dari daftar kandidat seleksi? (Data siswa tetap aman di database siswa).`)) {
-      deleteSelectionCandidate(candId);
-      showNotification('success', 'Kandidat berhasil dihapus dari daftar seleksi.');
+      await deleteSelectionCandidate(candId);
+      showNotification('success', 'Kandidat berhasil dihapus dari daftar seleksi database.');
     }
   };
 
   // Handle Reset to Default
-  const handleResetToDefault = () => {
+  const handleResetToDefault = async () => {
     if (confirm('Muat ulang daftar kandidat bakal calon ke rekomendasi standar (12 kandidat terbagi rata di 7A, 7B, 8A, 8B)?')) {
-      resetSelectionCandidates();
-      showNotification('success', 'Daftar bakal calon berhasil dimuat ulang ke setelan default.');
+      await resetSelectionCandidates();
+      showNotification('success', 'Daftar bakal calon berhasil dimuat ulang ke setelan default dan disimpan ke database.');
     }
   };
 
