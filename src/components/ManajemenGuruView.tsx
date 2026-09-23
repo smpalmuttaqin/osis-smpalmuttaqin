@@ -14,6 +14,11 @@ import {
   Building2,
   BookOpen,
 } from 'lucide-react';
+import {
+  showSuccessAlert,
+  showErrorAlert,
+  showConfirmDialog,
+} from '../lib/sweetalert';
 
 export const ManajemenGuruView: React.FC = () => {
   const { users, addTeacher, updateTeacher, deleteTeacher, loginAsGuru, plenoEvaluations } = useApp();
@@ -34,39 +39,53 @@ export const ManajemenGuruView: React.FC = () => {
     t.full_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullName.trim()) return;
+    if (!fullName.trim()) {
+      showErrorAlert('Nama Guru Kosong', 'Silakan masukkan nama lengkap Dewan Guru.');
+      return;
+    }
 
     // Check duplicate
     const checkName = fullName.trim().toLowerCase();
     if (teachers.some((t) => t.full_name.toLowerCase().includes(checkName))) {
-      alert('Nama guru dengan kemiripan tersebut sudah terdaftar.');
+      showErrorAlert('Guru Sudah Terdaftar', 'Nama guru dengan kemiripan tersebut sudah terdaftar.');
       return;
     }
 
-    addTeacher(fullName.trim(), titleOrSubject.trim());
+    const enteredName = fullName.trim();
+    await addTeacher(enteredName, titleOrSubject.trim());
+    showSuccessAlert('Dewan Guru Ditambahkan!', `Ustadz/Ustadzah "${enteredName}" berhasil ditambahkan ke database.`, 2500);
     setFullName('');
     setTitleOrSubject('');
     setIsAdding(false);
   };
 
-  const handleUpdate = (e: React.FormEvent) => {
+  const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingTeacher || !editFullName.trim()) return;
+    if (!editingTeacher || !editFullName.trim()) {
+      showErrorAlert('Nama Guru Kosong', 'Nama dewan guru tidak boleh kosong.');
+      return;
+    }
 
-    updateTeacher(editingTeacher.id, editFullName.trim());
+    const updatedName = editFullName.trim();
+    await updateTeacher(editingTeacher.id, updatedName);
+    showSuccessAlert('Data Guru Diperbarui!', `Perubahan data "${updatedName}" berhasil disimpan ke database.`, 2500);
     setEditingTeacher(null);
     setEditFullName('');
   };
 
-  const handleDelete = (teacher: User) => {
-    if (
-      confirm(
-        `Yakin ingin menghapus data "${teacher.full_name}" dari daftar Dewan Guru?\nGuru bersangkutan tidak akan dapat login lagi ke Musyawarah Pleno.`
-      )
-    ) {
-      deleteTeacher(teacher.id);
+  const handleDelete = async (teacher: User) => {
+    const isConfirmed = await showConfirmDialog(
+      'Hapus Dewan Guru?',
+      `Yakin ingin menghapus data "${teacher.full_name}" dari daftar Dewan Guru? Guru bersangkutan tidak akan dapat login lagi ke Musyawarah Pleno.`,
+      'Ya, Hapus',
+      'Batal'
+    );
+
+    if (isConfirmed) {
+      await deleteTeacher(teacher.id);
+      showSuccessAlert('Data Guru Dihapus', `Data "${teacher.full_name}" berhasil dihapus dari database.`, 2000);
     }
   };
 

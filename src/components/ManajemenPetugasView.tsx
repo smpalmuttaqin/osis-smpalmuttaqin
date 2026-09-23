@@ -1,6 +1,11 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { ShieldCheck, Plus, Trash2, X } from 'lucide-react';
+import {
+  showSuccessAlert,
+  showErrorAlert,
+  showConfirmDialog,
+} from '../lib/sweetalert';
 
 export const ManajemenPetugasView: React.FC = () => {
   const { users, roles, addPetugas, deletePetugas } = useApp();
@@ -14,17 +19,22 @@ export const ManajemenPetugasView: React.FC = () => {
   // Filter operator users (Role 3 & 4)
   const operatorUsers = users.filter((u) => u.role_id === 3 || u.role_id === 4);
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!username.trim() || !fullName.trim() || !password.trim()) return;
-
-    // Check username collision
-    if (users.some((u) => u.username?.toLowerCase() === username.trim().toLowerCase())) {
-      alert('Username tersebut sudah digunakan oleh akun lain.');
+    if (!username.trim() || !fullName.trim() || !password.trim()) {
+      showErrorAlert('Data Tidak Lengkap', 'Silakan isi username, nama lengkap, dan kata sandi petugas.');
       return;
     }
 
-    addPetugas(username.trim(), fullName.trim(), password.trim(), roleId);
+    // Check username collision
+    if (users.some((u) => u.username?.toLowerCase() === username.trim().toLowerCase())) {
+      showErrorAlert('Username Terpakai', 'Username tersebut sudah digunakan oleh akun lain.');
+      return;
+    }
+
+    const enteredFullName = fullName.trim();
+    await addPetugas(username.trim(), enteredFullName, password.trim(), roleId);
+    showSuccessAlert('Akun Petugas Dibuat!', `Akun untuk "${enteredFullName}" berhasil didaftarkan.`, 2500);
     setUsername('');
     setFullName('');
     setPassword('');
@@ -209,9 +219,16 @@ export const ManajemenPetugasView: React.FC = () => {
                     <td className="py-2.5 px-4 text-right">
                       <button
                         type="button"
-                        onClick={() => {
-                          if (confirm(`Hapus akun petugas "${user.full_name}"?`)) {
-                            deletePetugas(user.id);
+                        onClick={async () => {
+                          const isConfirmed = await showConfirmDialog(
+                            'Hapus Akun Petugas?',
+                            `Yakin ingin menghapus akun petugas "${user.full_name}" (${user.username})? Petugas tidak dapat login kembali.`,
+                            'Ya, Hapus',
+                            'Batal'
+                          );
+                          if (isConfirmed) {
+                            await deletePetugas(user.id);
+                            showSuccessAlert('Akun Dihapus', `Akun petugas "${user.full_name}" berhasil dihapus.`, 2000);
                           }
                         }}
                         className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded transition-colors"

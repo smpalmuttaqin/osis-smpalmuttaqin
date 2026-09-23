@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { ExcelImportModal } from './ExcelImportModal';
 import { downloadExcelTemplate } from '../lib/excelImporter';
+import { showSuccessAlert, showErrorAlert, showConfirmDialog } from '../lib/sweetalert';
 
 export const ManajemenDataView: React.FC = () => {
   const { students, classes, addStudent, updateStudent, deleteStudent, getClassById } = useApp();
@@ -43,10 +44,15 @@ export const ManajemenDataView: React.FC = () => {
     });
   }, [students, filterRombel, searchQuery, getClassById]);
 
-  const handleAddStudent = (e: React.FormEvent) => {
+  const handleAddStudent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newName.trim()) return;
-    addStudent(newName.trim(), newClassId);
+    if (!newName.trim()) {
+      showErrorAlert('Nama Kosong', 'Silakan masukkan nama siswa.');
+      return;
+    }
+    const enteredName = newName.trim();
+    await addStudent(enteredName, newClassId);
+    showSuccessAlert('Siswa Berhasil Ditambahkan!', `Data siswa "${enteredName}" telah disimpan ke database.`, 2500);
     setNewName('');
     setIsAdding(false);
   };
@@ -57,10 +63,15 @@ export const ManajemenDataView: React.FC = () => {
     setEditClassId(currentClassId);
   };
 
-  const handleSaveEdit = (e: React.FormEvent) => {
+  const handleSaveEdit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!editingId || !editName.trim()) return;
-    updateStudent(editingId, editName.trim(), editClassId);
+    if (!editingId || !editName.trim()) {
+      showErrorAlert('Nama Kosong', 'Nama siswa tidak boleh kosong.');
+      return;
+    }
+    const updatedName = editName.trim();
+    await updateStudent(editingId, updatedName, editClassId);
+    showSuccessAlert('Data Siswa Diperbarui!', `Perubahan data "${updatedName}" berhasil disimpan ke database.`, 2500);
     setEditingId(null);
   };
 
@@ -341,9 +352,16 @@ export const ManajemenDataView: React.FC = () => {
                         </button>
                         <button
                           type="button"
-                          onClick={() => {
-                            if (confirm(`Hapus siswa "${student.full_name}"?`)) {
-                              deleteStudent(student.id);
+                          onClick={async () => {
+                            const isConfirmed = await showConfirmDialog(
+                              'Hapus Data Siswa?',
+                              `Yakin ingin menghapus data "${student.full_name}"? Aksi ini akan menghapus data terkait dari sistem.`,
+                              'Ya, Hapus',
+                              'Batal'
+                            );
+                            if (isConfirmed) {
+                              await deleteStudent(student.id);
+                              showSuccessAlert('Data Siswa Dihapus', `Data "${student.full_name}" berhasil dihapus.`, 2000);
                             }
                           }}
                           className="p-1 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded"

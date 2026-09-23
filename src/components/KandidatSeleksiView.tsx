@@ -19,6 +19,12 @@ import {
   GraduationCap,
   Sparkles,
 } from 'lucide-react';
+import {
+  showSuccessAlert,
+  showErrorAlert,
+  showConfirmDialog,
+  showToast,
+} from '../lib/sweetalert';
 
 export const KandidatSeleksiView: React.FC = () => {
   const {
@@ -164,18 +170,23 @@ export const KandidatSeleksiView: React.FC = () => {
   const handleSingleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedStudentId) {
-      showNotification('error', 'Mohon pilih santri terlebih dahulu.');
+      showErrorAlert('Pilih Santri', 'Mohon pilih santri terlebih dahulu.');
       return;
     }
 
     const res = await addSelectionCandidate(selectedStudentId, candidateNotes);
     if (res.success) {
-      showNotification('success', 'Bakal calon berhasil ditambahkan ke database.');
+      const student = getStudentById(selectedStudentId);
+      showSuccessAlert(
+        'Bakal Calon Berhasil Ditambahkan!',
+        `Santri "${student?.full_name || 'Santri'}" telah masuk ke daftar kandidat seleksi.`,
+        2500
+      );
       setSelectedStudentId('');
       setCandidateNotes('');
       setIsAddModalOpen(false);
     } else {
-      showNotification('error', res.error || 'Gagal menambahkan bakal calon.');
+      showErrorAlert('Gagal Menambahkan', res.error || 'Gagal menambahkan bakal calon.');
     }
   };
 
@@ -183,18 +194,22 @@ export const KandidatSeleksiView: React.FC = () => {
   const handleNewStudentAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newStudentName.trim()) {
-      showNotification('error', 'Nama santri tidak boleh kosong.');
+      showErrorAlert('Data Tidak Lengkap', 'Nama santri tidak boleh kosong.');
       return;
     }
 
     const res = await addStudentAsSelectionCandidate(newStudentName, newStudentClassId, candidateNotes);
     if (res.success) {
-      showNotification('success', `Santri "${newStudentName.trim()}" berhasil didaftarkan dan dimasukkan ke daftar bakal calon database.`);
+      showSuccessAlert(
+        'Santri Baru & Bakal Calon Tersimpan!',
+        `Santri "${newStudentName.trim()}" berhasil didaftarkan dan dimasukkan ke daftar bakal calon.`,
+        2500
+      );
       setNewStudentName('');
       setCandidateNotes('');
       setIsAddModalOpen(false);
     } else {
-      showNotification('error', res.error || 'Gagal mendaftarkan santri baru.');
+      showErrorAlert('Gagal Mendaftarkan', res.error || 'Gagal mendaftarkan santri baru.');
     }
   };
 
@@ -202,12 +217,16 @@ export const KandidatSeleksiView: React.FC = () => {
   const handleBulkAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (bulkSelectedStudentIds.length === 0) {
-      showNotification('error', 'Pilih minimal satu santri untuk ditambahkan.');
+      showErrorAlert('Pilih Santri', 'Pilih minimal satu santri untuk ditambahkan.');
       return;
     }
 
     const res = await bulkAddSelectionCandidates(bulkSelectedStudentIds);
-    showNotification('success', `Berhasil menambahkan ${res.addedCount} santri sebagai bakal calon ke database.`);
+    showSuccessAlert(
+      'Kandidat Berhasil Ditambahkan!',
+      `Berhasil menambahkan ${res.addedCount} santri sebagai bakal calon.`,
+      2500
+    );
     setBulkSelectedStudentIds([]);
     setIsAddModalOpen(false);
   };
@@ -222,23 +241,45 @@ export const KandidatSeleksiView: React.FC = () => {
       is_active: editIsActive,
     });
 
-    showNotification('success', 'Data bakal calon berhasil diperbarui di database.');
+    showSuccessAlert(
+      'Data Berhasil Diperbarui!',
+      'Catatan profil dan status bakal calon telah diperbarui di database.',
+      2500
+    );
     setEditingCandidate(null);
   };
 
   // Handle Delete Candidate
   const handleDeleteCandidate = async (candId: string, studentName?: string) => {
-    if (confirm(`Hapus "${studentName || 'Bakal calon'}" dari daftar kandidat seleksi? (Data siswa tetap aman di database siswa).`)) {
+    const isConfirmed = await showConfirmDialog(
+      'Hapus Bakal Calon?',
+      `Hapus "${studentName || 'Bakal calon'}" dari daftar kandidat seleksi? (Data siswa tetap aman di database siswa).`,
+      'Ya, Hapus',
+      'Batal'
+    );
+
+    if (isConfirmed) {
       await deleteSelectionCandidate(candId);
-      showNotification('success', 'Kandidat berhasil dihapus dari daftar seleksi database.');
+      showSuccessAlert('Kandidat Dihapus', 'Kandidat berhasil dihapus dari daftar seleksi database.', 2000);
     }
   };
 
   // Handle Reset to Default
   const handleResetToDefault = async () => {
-    if (confirm('Muat ulang daftar kandidat bakal calon ke rekomendasi standar (12 kandidat terbagi rata di 7A, 7B, 8A, 8B)?')) {
+    const isConfirmed = await showConfirmDialog(
+      'Muat Ulang Setelan Default?',
+      'Muat ulang daftar kandidat bakal calon ke rekomendasi standar (12 kandidat terbagi rata di 7A, 7B, 8A, 8B)?',
+      'Ya, Muat Ulang',
+      'Batal'
+    );
+
+    if (isConfirmed) {
       await resetSelectionCandidates();
-      showNotification('success', 'Daftar bakal calon berhasil dimuat ulang ke setelan default dan disimpan ke database.');
+      showSuccessAlert(
+        'Setelan Default Dimuat Ulang',
+        'Daftar 12 bakal calon standar berhasil disinkronkan ke database.',
+        2500
+      );
     }
   };
 

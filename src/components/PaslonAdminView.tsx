@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Award, Save, Check, Users } from 'lucide-react';
+import { showSuccessAlert, showErrorAlert } from '../lib/sweetalert';
 
 export const PaslonAdminView: React.FC = () => {
   const { candidates, students, saveCandidate, getStudentById, getClassById, plenoEvaluations } = useApp();
@@ -32,16 +33,23 @@ export const PaslonAdminView: React.FC = () => {
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
     if (!chairmanId || !viceChairmanId) {
-      alert('Pilih Calon Ketua dan Calon Wakil Ketua.');
+      showErrorAlert('Pilihan Belum Lengkap', 'Silakan pilih Calon Ketua dan Calon Wakil Ketua.');
       return;
     }
     if (chairmanId === viceChairmanId) {
-      alert('Ketua dan Wakil Ketua tidak boleh merupakan orang yang sama.');
+      showErrorAlert('Pilihan Tidak Valid', 'Ketua dan Wakil Ketua tidak boleh merupakan orang yang sama.');
       return;
     }
 
     saveCandidate(activeCandidateId, chairmanId, viceChairmanId, visionMission);
     setSaveSuccess(true);
+    const chair = getStudentById(chairmanId);
+    const vice = getStudentById(viceChairmanId);
+    showSuccessAlert(
+      `Paslon 0${activeCandidateId} Berhasil Ditetapkan!`,
+      `Ketua: ${chair?.full_name || '-'} & Wakil: ${vice?.full_name || '-'} telah tersimpan ke sistem.`,
+      3000
+    );
     setTimeout(() => setSaveSuccess(false), 2500);
   };
 

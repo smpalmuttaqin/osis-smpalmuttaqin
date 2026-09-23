@@ -717,4 +717,189 @@ Route::middleware(['auth'])->group(function () {
 </aside>
 `,
   },
+  {
+    id: 'app-blade',
+    name: 'app.blade.php (SweetAlert2)',
+    path: 'resources/views/layouts/app.blade.php',
+    category: 'Blade View',
+    language: 'html',
+    content: `<!DOCTYPE html>
+<html lang="id" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+    <title>{{ config('app.name', 'E-Pilketos SMP Al Muttaqin') }}</title>
+
+    <!-- Tailwind CSS (Vite / CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- SweetAlert2 CDN (Versi Terbaru) -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <style>
+        /* Penyesuaian tema SweetAlert2 agar selaras dengan Tailwind Emerald */
+        .swal2-popup.pilketos-swal {
+            border-radius: 1rem !important;
+            font-family: inherit !important;
+            box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1) !important;
+        }
+        .swal2-confirm.pilketos-btn-emerald {
+            background-color: #059669 !important;
+            border-radius: 0.75rem !important;
+            font-weight: 600 !important;
+            padding: 0.625rem 1.25rem !important;
+        }
+        .swal2-cancel.pilketos-btn-cancel {
+            background-color: #f1f5f9 !important;
+            color: #334155 !important;
+            border-radius: 0.75rem !important;
+            font-weight: 600 !important;
+            padding: 0.625rem 1.25rem !important;
+        }
+    </style>
+</head>
+<body class="h-full antialiased font-sans text-slate-800 bg-slate-50">
+    <div class="flex h-screen overflow-hidden">
+        <!-- Sidebar Navigation -->
+        @include('layouts.sidebar')
+
+        <!-- Main Content Area -->
+        <main class="flex-1 overflow-y-auto p-6 md:p-8">
+            @yield('content')
+        </main>
+    </div>
+
+    <!-- ========================================================== -->
+    <!-- GLOBAL SWEETALERT2 LISTENER UNTUK FLASH MESSAGES LARAVEL   -->
+    <!-- ========================================================== -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                customClass: {
+                    popup: 'pilketos-swal'
+                }
+            });
+
+            @if(session('success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Berhasil!',
+                    text: "{{ session('success') }}",
+                    iconColor: '#059669',
+                    timer: 2500,
+                    timerProgressBar: true,
+                    confirmButtonText: 'Tutup',
+                    customClass: {
+                        popup: 'pilketos-swal',
+                        confirmButton: 'pilketos-btn-emerald'
+                    },
+                    buttonsStyling: false
+                });
+            @endif
+
+            @if(session('voting_success'))
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Suara Anda Berhasil Disimpan!',
+                    html: '<div class="mt-2 text-center text-sm text-slate-600"><p>{{ session("voting_success") }}</p><p class="text-xs text-slate-400 mt-2 italic">Layar kembali ke menu absensi...</p></div>',
+                    iconColor: '#059669',
+                    timer: 3000,
+                    timerProgressBar: true,
+                    showConfirmButton: false,
+                    allowOutsideClick: false,
+                    customClass: {
+                        popup: 'pilketos-swal'
+                    }
+                }).then(() => {
+                    window.location.href = "{{ route('voting.bilik') }}";
+                });
+            @endif
+
+            @if(session('error'))
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Terjadi Kesalahan',
+                    text: "{{ session('error') }}",
+                    iconColor: '#e11d48',
+                    confirmButtonText: 'Tutup',
+                    customClass: {
+                        popup: 'pilketos-swal',
+                        confirmButton: 'pilketos-btn-emerald'
+                    },
+                    buttonsStyling: false
+                });
+            @endif
+
+            @if(session('warning'))
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Perhatian',
+                    text: "{{ session('warning') }}",
+                    iconColor: '#d97706',
+                    confirmButtonText: 'Mengerti',
+                    customClass: {
+                        popup: 'pilketos-swal',
+                        confirmButton: 'pilketos-btn-emerald'
+                    },
+                    buttonsStyling: false
+                });
+            @endif
+
+            @if($errors->any())
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Validasi Gagal',
+                    html: '<ul class="text-left text-xs text-rose-700 list-disc pl-5 mt-2">@foreach ($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>',
+                    iconColor: '#e11d48',
+                    confirmButtonText: 'Perbaiki',
+                    customClass: {
+                        popup: 'pilketos-swal',
+                        confirmButton: 'pilketos-btn-emerald'
+                    },
+                    buttonsStyling: false
+                });
+            @endif
+        });
+
+        /**
+         * Global Helper JS untuk Konfirmasi Hapus Data dengan SweetAlert2
+         * Digunakan pada tombol/form delete: onsubmit="return confirmDelete(event, this, 'Hapus siswa ini?')"
+         */
+        function confirmDelete(event, formElement, message = 'Data yang dihapus tidak dapat dipulihkan kembali.') {
+            event.preventDefault();
+            Swal.fire({
+                title: 'Apakah Anda Yakin?',
+                text: message,
+                icon: 'warning',
+                iconColor: '#d97706',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Hapus Data',
+                cancelButtonText: 'Batal',
+                reverseButtons: true,
+                customClass: {
+                    popup: 'pilketos-swal',
+                    confirmButton: 'pilketos-btn-emerald',
+                    cancelButton: 'pilketos-btn-cancel'
+                },
+                buttonsStyling: false
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    formElement.submit();
+                }
+            });
+            return false;
+        }
+    </script>
+    @stack('scripts')
+</body>
+</html>
+`,
+  },
 ];
+

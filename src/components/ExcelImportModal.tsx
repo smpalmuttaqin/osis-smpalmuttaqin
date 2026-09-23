@@ -18,6 +18,7 @@ import {
   downloadExcelTemplate,
   ExcelParseResult,
 } from '../lib/excelImporter';
+import { showSuccessAlert, showErrorAlert } from '../lib/sweetalert';
 
 interface ExcelImportModalProps {
   isOpen: boolean;
@@ -111,15 +112,18 @@ export const ExcelImportModal: React.FC<ExcelImportModalProps> = ({
           msg += ` (${res.createdClassesCount} rombel kelas baru berhasil dibuat otomatis).`;
         }
         setImportSuccessMessage(msg);
+        showSuccessAlert('Impor Data Siswa Berhasil!', msg, 3000);
 
         setTimeout(() => {
           if (onSuccess) onSuccess();
           onClose();
-        }, 1800);
+        }, 1500);
       } else {
+        showErrorAlert('Gagal Impor Data', res.error || 'Gagal menyimpan data import.');
         setImportErrorMessage(res.error || 'Gagal menyimpan data import.');
       }
     } catch (err: any) {
+      showErrorAlert('Error Sistem', err?.message || 'Terjadi kesalahan sistem saat proses import.');
       setImportErrorMessage(err?.message || 'Terjadi kesalahan sistem saat proses import.');
     } finally {
       setIsImporting(false);

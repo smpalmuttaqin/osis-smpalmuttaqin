@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { UserCheck, Check, AlertCircle, Search, Vote } from 'lucide-react';
+import { showSuccessAlert, showErrorAlert } from '../lib/sweetalert';
 
 export const SeleksiView: React.FC = () => {
   const {
@@ -149,9 +150,15 @@ export const SeleksiView: React.FC = () => {
 
     const res = castSelectionVote(selectedVoterId, [nominee1, nominee2, nominee3]);
     if (res.success) {
+      const voterName = selectedVoter?.full_name || 'Siswa';
+      showSuccessAlert(
+        'Suara Seleksi Berhasil Disimpan!',
+        `Pilihan 3 nama bakal calon atas nama "${voterName}" telah berhasil dicatat ke dalam sistem.`,
+        3000
+      );
       setNotification({
         type: 'success',
-        message: `Suara seleksi atas nama "${selectedVoter?.full_name}" berhasil disimpan.`,
+        message: `Suara seleksi atas nama "${voterName}" berhasil disimpan.`,
       });
       // Reset choices for next student
       setSelectedVoterId('');
@@ -159,6 +166,7 @@ export const SeleksiView: React.FC = () => {
       setNominee2('');
       setNominee3('');
     } else {
+      showErrorAlert('Gagal Menyimpan Suara', res.error || 'Terjadi kesalahan saat menyimpan suara seleksi.');
       setNotification({ type: 'error', message: res.error || 'Gagal menyimpan suara seleksi.' });
     }
   };

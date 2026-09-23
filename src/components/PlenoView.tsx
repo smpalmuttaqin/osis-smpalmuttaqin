@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { Save, Check, CheckCircle2, Award, ArrowRight, MessageSquareQuote } from 'lucide-react';
+import { showSuccessAlert, showToast, showErrorAlert } from '../lib/sweetalert';
 
 export const PlenoView: React.FC = () => {
   const {
@@ -37,12 +38,16 @@ export const PlenoView: React.FC = () => {
     const currentlySelected = existing?.is_selected_for_paslon ?? false;
 
     if (!currentlySelected && selectedCount >= 6) {
-      alert('Maksimal menandai 6 kandidat terbaik untuk pasangan calon.');
+      showErrorAlert('Batas Maksimal Tercapai', 'Maksimal menandai 6 kandidat terbaik untuk pasangan calon.');
       return;
     }
 
     const currentNote = editingNotes[studentId] || existing?.teacher_notes || '';
     savePlenoNote(studentId, currentNote, !currentlySelected);
+    showToast(
+      'success',
+      !currentlySelected ? 'Kandidat ditandai untuk Paslon' : 'Tanda Paslon dibatalkan'
+    );
   };
 
   const handleSaveEvaluation = (studentId: string) => {
@@ -52,6 +57,11 @@ export const PlenoView: React.FC = () => {
 
     savePlenoNote(studentId, note, isSelected);
     setSavedSuccessId(studentId);
+    showSuccessAlert(
+      'Catatan Pleno Berhasil Disimpan!',
+      'Evaluasi dan rekomendasi kualitatif Dewan Guru telah dicatat ke dalam database.',
+      2500
+    );
     setTimeout(() => setSavedSuccessId(null), 2500);
   };
 

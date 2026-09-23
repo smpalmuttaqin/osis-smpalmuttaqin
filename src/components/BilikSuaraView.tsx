@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   UserCheck,
 } from 'lucide-react';
+import { showVotingSuccessAlert, showToast, showErrorAlert } from '../lib/sweetalert';
 
 export const BilikSuaraView: React.FC = () => {
   const {
@@ -49,11 +50,13 @@ export const BilikSuaraView: React.FC = () => {
     setStatusMessage(null);
 
     if (!selectedStudentId) {
+      showErrorAlert('Pilih Siswa', 'Silakan pilih siswa yang hadir di bilik suara.');
       setStatusMessage({ type: 'error', text: 'Silakan pilih siswa yang hadir di bilik suara.' });
       return;
     }
 
     if (studentAlreadyAttended) {
+      showErrorAlert('Sudah Memilih', 'Siswa ini sudah melakukan absensi dan hak suara telah digunakan sebelumnya!');
       setStatusMessage({
         type: 'error',
         text: 'Siswa ini sudah melakukan absensi dan hak suara telah digunakan sebelumnya!',
@@ -64,12 +67,15 @@ export const BilikSuaraView: React.FC = () => {
     // Check in the student
     const res = checkInStudent(selectedStudentId);
     if (!res.success) {
+      showErrorAlert('Gagal Absensi', res.error || 'Gagal memproses absensi.');
       setStatusMessage({ type: 'error', text: res.error || 'Gagal memproses absensi.' });
       return;
     }
 
     // Launch voting booth
-    setActiveVoterName(selectedStudent?.full_name || 'Siswa');
+    const voterName = selectedStudent?.full_name || 'Siswa';
+    showToast('success', `Absensi Berhasil: ${voterName} dipersilakan menuju Bilik Suara.`, 2500);
+    setActiveVoterName(voterName);
     setIsInVotingBooth(true);
   };
 
@@ -77,12 +83,21 @@ export const BilikSuaraView: React.FC = () => {
   const handleConfirmVote = () => {
     if (confirmingCandidateId === null) return;
 
+    const cand = candidates.find((c) => c.id === confirmingCandidateId);
+    const chair = cand ? getStudentById(cand.chairman_student_id) : null;
+    const vice = cand ? getStudentById(cand.vice_chairman_student_id) : null;
+    const candidateName = `${chair?.full_name || 'Ketua'} & ${vice?.full_name || 'Wakil'}`;
+
     const res = castFinalVote(confirmingCandidateId);
     if (res.success) {
+      const chosenCandId = confirmingCandidateId;
       setConfirmingCandidateId(null);
       setVoteSubmittedSuccess(true);
 
-      // Reset back to attendance after 3.5s for next student
+      // Trigger SweetAlert voting success alert
+      showVotingSuccessAlert(candidateName, chosenCandId);
+
+      // Reset back to attendance after 3s for next student
       setTimeout(() => {
         setVoteSubmittedSuccess(false);
         setIsInVotingBooth(false);
