@@ -2,67 +2,91 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { UserRole } from '../types/database';
 import { AlMuttaqinLogo } from './AlMuttaqinLogo';
-import { Building2, ShieldCheck, GraduationCap, Vote, CheckSquare, ArrowRight, AlertCircle, Database } from 'lucide-react';
-import { INITIAL_TEACHERS } from '../data/initialData';
+import { ShieldCheck, GraduationCap, Vote, CheckSquare, ArrowRight, AlertCircle, Database, Clock } from 'lucide-react';
 
 export const LoginView: React.FC = () => {
-  const { users, loginAsAdmin, loginAsGuru, loginAsPetugas, supabaseStatus, setIsSupabaseModalOpen } = useApp();
+  const {
+    users,
+    loginAsAdmin,
+    loginAsGuru,
+    loginAsPetugas,
+    supabaseStatus,
+    setIsSupabaseModalOpen,
+    sessionTimeoutReason,
+    clearSessionTimeoutReason,
+  } = useApp();
 
-  // Get active teachers from master users
+  // Active teacher list for master validation
   const teachers = users.filter((u) => u.role_id === 2);
   const teacherNames = teachers.map((t) => t.full_name);
 
   const [selectedRole, setSelectedRole] = useState<UserRole>('admin');
-  const [adminPassword, setAdminPassword] = useState('admin123');
-  const [adminUsername, setAdminUsername] = useState('admin');
-  const [teacherName, setTeacherName] = useState(teacherNames[0] || '');
-  const [petugasUsername, setPetugasUsername] = useState('petugas.seleksi');
-  const [petugasPassword, setPetugasPassword] = useState('seleksi123');
+  const [adminUsername, setAdminUsername] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+  const [teacherName, setTeacherName] = useState('');
+  const [petugasUsername, setPetugasUsername] = useState('');
+  const [petugasPassword, setPetugasPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const handleRoleChange = (role: UserRole) => {
     setSelectedRole(role);
     setErrorMsg(null);
-    if (role === 'seleksi') {
-      setPetugasUsername('petugas.seleksi');
-      setPetugasPassword('seleksi123');
-    } else if (role === 'pemilihan') {
-      setPetugasUsername('petugas.pemilihan');
-      setPetugasPassword('pemilihan123');
-    }
+    clearSessionTimeoutReason();
+    // Enforce manual typing: always clear fields on tab switch
+    setAdminUsername('');
+    setAdminPassword('');
+    setTeacherName('');
+    setPetugasUsername('');
+    setPetugasPassword('');
   };
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMsg(null);
+    clearSessionTimeoutReason();
 
     if (selectedRole === 'admin') {
-      if (adminUsername.trim() !== 'admin') {
-        setErrorMsg('Username admin tidak cocok.');
+      if (!adminUsername.trim() || !adminPassword) {
+        setErrorMsg('Mohon masukkan nama pengguna dan kata sandi Administrator.');
+        return;
+      }
+      if (adminUsername.trim().toLowerCase() !== 'admin') {
+        setErrorMsg('Nama pengguna Administrator tidak sesuai.');
         return;
       }
       const success = loginAsAdmin(adminPassword);
       if (!success) {
-        setErrorMsg('Kata sandi admin salah. Gunakan: admin123');
+        setErrorMsg('Kata sandi Administrator tidak valid. Mohon periksa kembali.');
       }
     } else if (selectedRole === 'guru') {
-      if (!teacherName.trim()) {
-        setErrorMsg('Silakan masukkan atau pilih nama lengkap guru.');
+      const inputName = teacherName.trim();
+      if (!inputName) {
+        setErrorMsg('Mohon masukkan nama lengkap Dewan Guru.');
         return;
       }
-      const success = loginAsGuru(teacherName);
+      const success = loginAsGuru(inputName);
       if (!success) {
-        setErrorMsg('Nama guru tidak ditemukan dalam data master.');
+        setErrorMsg(
+          `Nama "${inputName}" tidak terdaftar dalam data Dewan Guru. Pastikan penulisan nama dan gelar sesuai data master.`
+        );
       }
     } else if (selectedRole === 'seleksi') {
+      if (!petugasUsername.trim() || !petugasPassword) {
+        setErrorMsg('Mohon lengkapi nama pengguna dan kata sandi Petugas Seleksi.');
+        return;
+      }
       const success = loginAsPetugas(petugasUsername, petugasPassword, 'seleksi');
       if (!success) {
-        setErrorMsg('Username atau password petugas seleksi tidak cocok.');
+        setErrorMsg('Nama pengguna atau kata sandi Petugas Seleksi tidak sesuai.');
       }
     } else if (selectedRole === 'pemilihan') {
+      if (!petugasUsername.trim() || !petugasPassword) {
+        setErrorMsg('Mohon lengkapi nama pengguna dan kata sandi Petugas Bilik Suara.');
+        return;
+      }
       const success = loginAsPetugas(petugasUsername, petugasPassword, 'pemilihan');
       if (!success) {
-        setErrorMsg('Username atau password petugas pemilihan tidak cocok.');
+        setErrorMsg('Nama pengguna atau kata sandi Petugas Bilik Suara tidak sesuai.');
       }
     }
   };
@@ -156,6 +180,16 @@ export const LoginView: React.FC = () => {
             </p>
           </div>
 
+          {sessionTimeoutReason && (
+            <div className="mb-4 p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex items-start gap-2.5 text-xs text-amber-900 shadow-2xs animate-fadeIn">
+              <Clock className="w-4 h-4 shrink-0 mt-0.5 text-amber-600" />
+              <div className="flex-1">
+                <p className="font-semibold text-amber-900">Sesi Berakhir Otomatis</p>
+                <p className="text-[11px] text-amber-800 mt-0.5 leading-relaxed">{sessionTimeoutReason}</p>
+              </div>
+            </div>
+          )}
+
           {errorMsg && (
             <div className="mb-4 p-3 rounded-lg bg-rose-50 border border-rose-200 flex items-start gap-2.5 text-xs text-rose-700">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-500" />
@@ -164,34 +198,41 @@ export const LoginView: React.FC = () => {
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
+            {/* Security Notice Banner */}
+            <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center gap-2 text-[11px] text-emerald-900">
+              <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+              <span>Autentikasi Pengguna: Silakan masukkan kredensial resmi Anda untuk mengakses portal.</span>
+            </div>
+
             {selectedRole === 'admin' && (
               <>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Username Admin
+                    Nama Pengguna Admin
                   </label>
                   <input
                     type="text"
                     value={adminUsername}
                     onChange={(e) => setAdminUsername(e.target.value)}
                     required
+                    autoComplete="off"
                     className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500"
-                    placeholder="admin"
+                    placeholder="Masukkan nama pengguna..."
                   />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Kata Sandi
+                    Kata Sandi Admin
                   </label>
                   <input
                     type="password"
                     value={adminPassword}
                     onChange={(e) => setAdminPassword(e.target.value)}
                     required
+                    autoComplete="new-password"
                     className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 font-mono"
-                    placeholder="••••••••"
+                    placeholder="Masukkan kata sandi..."
                   />
-                  <p className="text-[11px] text-slate-400 mt-1">Default: admin123</p>
                 </div>
               </>
             )}
@@ -205,57 +246,27 @@ export const LoginView: React.FC = () => {
                       <span>Belum Ada Data Dewan Guru di Database</span>
                     </div>
                     <p className="text-[11px] text-amber-700 leading-relaxed">
-                      Database saat ini masih kosong. Silakan masuk sebagai <strong>Administrator</strong> (default: admin / admin123) untuk menambahkan data guru melalui menu "Kelola Data Dewan Guru".
+                      Database saat ini masih kosong. Silakan masuk sebagai <strong>Administrator</strong> untuk menambahkan data guru melalui menu "Kelola Data Dewan Guru".
                     </p>
                   </div>
                 ) : (
-                  <>
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Nama Lengkap Guru (Sesuai Data Master)
-                      </label>
-                      <input
-                        type="text"
-                        value={teacherName}
-                        onChange={(e) => setTeacherName(e.target.value)}
-                        required
-                        list="teacher-list"
-                        className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
-                        placeholder="Ketik atau pilih nama guru..."
-                      />
-                      <datalist id="teacher-list">
-                        {teacherNames.map((t) => (
-                          <option key={t} value={t} />
-                        ))}
-                      </datalist>
-                      <p className="text-[11px] text-slate-400 mt-1">
-                        Guru masuk tanpa password, sistem mencocokkan nama dengan master guru.
-                      </p>
-                    </div>
-
-                    {/* Quick teacher selector chips */}
-                    <div>
-                      <label className="block text-[11px] font-medium text-slate-500 mb-1.5">
-                        Pilih Cepat Guru Terdaftar:
-                      </label>
-                      <div className="flex flex-wrap gap-1.5 max-h-32 overflow-y-auto pr-1">
-                        {teacherNames.slice(0, 6).map((t) => (
-                          <button
-                            key={t}
-                            type="button"
-                            onClick={() => setTeacherName(t)}
-                            className={`text-[11px] px-2 py-1 rounded border transition-colors text-left ${
-                              teacherName === t
-                                ? 'bg-indigo-50 border-indigo-300 text-indigo-700 font-medium'
-                                : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-                            }`}
-                          >
-                            {t.split('(')[0].trim()}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Nama Lengkap Dewan Guru
+                    </label>
+                    <input
+                      type="text"
+                      value={teacherName}
+                      onChange={(e) => setTeacherName(e.target.value)}
+                      required
+                      autoComplete="off"
+                      className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
+                      placeholder="Contoh: Ustadz M. Ridwan, M.Pd."
+                    />
+                    <p className="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+                      Nama yang dimasukkan akan diverifikasi dengan data resmi Dewan Guru dan dicatat pada presensi Musyawarah Pleno.
+                    </p>
+                  </div>
                 )}
               </>
             )}
@@ -275,14 +286,16 @@ export const LoginView: React.FC = () => {
                 )}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Username Petugas
+                    Nama Pengguna Petugas {selectedRole === 'seleksi' ? 'Seleksi' : 'Pemilihan'}
                   </label>
                   <input
                     type="text"
                     value={petugasUsername}
                     onChange={(e) => setPetugasUsername(e.target.value)}
                     required
+                    autoComplete="off"
                     className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    placeholder="Masukkan nama pengguna petugas..."
                   />
                 </div>
                 <div>
@@ -294,11 +307,10 @@ export const LoginView: React.FC = () => {
                     value={petugasPassword}
                     onChange={(e) => setPetugasPassword(e.target.value)}
                     required
+                    autoComplete="new-password"
                     className="w-full text-xs bg-white text-slate-900 border border-slate-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 font-mono"
+                    placeholder="Masukkan kata sandi..."
                   />
-                  <p className="text-[11px] text-slate-400 mt-1">
-                    Default: {selectedRole === 'seleksi' ? 'seleksi123' : 'pemilihan123'}
-                  </p>
                 </div>
               </>
             )}

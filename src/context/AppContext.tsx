@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import {
   UserRole,
   Role,
@@ -79,6 +79,8 @@ interface AppContextType {
   loginAsPetugas: (username: string, password: string, expectedRole: 'seleksi' | 'pemilihan') => boolean;
   logout: () => void;
   quickSwitchRole: (role: UserRole) => void;
+  sessionTimeoutReason: string | null;
+  clearSessionTimeoutReason: () => void;
 
   // Helpers
   getStudentById: (id: string) => Student | undefined;
@@ -185,11 +187,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   }, []);
 
-  // Load from localStorage or initialize empty to strictly mirror database
-  const [currentUser, setCurrentUser] = useState<User | null>(() => {
-    const saved = localStorage.getItem(STORAGE_PREFIX + 'currentUser');
-    return saved ? JSON.parse(saved) : DEFAULT_ADMIN;
-  });
+  // Require explicit login when link is opened (do not keep old logged in user across link opening)
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  // Inactivity timeout message state
+  const [sessionTimeoutReason, setSessionTimeoutReason] = useState<string | null>(null);
+
+  const clearSessionTimeoutReason = () => {
+    setSessionTimeoutReason(null);
+  };
 
   const [activePage, setActivePage] = useState<PageView>('dashboard');
 
@@ -427,8 +433,73 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return results;
   };
 
+  // 5-Minute Inactivity Auto Logout System (300,000 ms)
+  const INACTIVITY_TIMEOUT_MS = 5 * 60 * 1000;
+  const lastActivityRef = useRef<number>(Date.now());
+
+  useEffect(() => {
+    if (!currentUser) return;
+
+    // Reset last activity timestamp on login or user switch
+    lastActivityRef.current = Date.now();
+
+    const recordActivity = () => {
+      lastActivityRef.current = Date.now();
+    };
+
+    const activityEvents = [
+      'mousemove',
+      'mousedown',
+      'keydown',
+      'touchstart',
+      'scroll',
+      'wheel',
+      'click',
+    ];
+
+    activityEvents.forEach((evt) => {
+      window.addEventListener(evt, recordActivity, { passive: true });
+    });
+
+    // Periodic check every 5 seconds for inactivity timeout
+    const interval = setInterval(() => {
+      if (Date.now() - lastActivityRef.current >= INACTIVITY_TIMEOUT_MS) {
+        setCurrentUser(null);
+        setActivePage('dashboard');
+        setSessionTimeoutReason(
+          'Sesi Anda telah otomatis keluar karena tidak ada aktivitas selama 5 menit. Demi keamanan data, silakan masuk kembali.'
+        );
+      }
+    }, 5000);
+
+    // Immediate check if browser tab is focused or becomes visible again
+    const handleVisibilityChange = () => {
+      if (!document.hidden && Date.now() - lastActivityRef.current >= INACTIVITY_TIMEOUT_MS) {
+        setCurrentUser(null);
+        setActivePage('dashboard');
+        setSessionTimeoutReason(
+          'Sesi Anda telah otomatis keluar karena tidak ada aktivitas selama 5 menit. Demi keamanan data, silakan masuk kembali.'
+        );
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    window.addEventListener('focus', handleVisibilityChange);
+
+    return () => {
+      activityEvents.forEach((evt) => {
+        window.removeEventListener(evt, recordActivity);
+      });
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('focus', handleVisibilityChange);
+    };
+  }, [currentUser]);
+
   // Auth
   const loginAsAdmin = (password: string) => {
+    setSessionTimeoutReason(null);
+    lastActivityRef.current = Date.now();
     const adminUser = users.find((u) => u.role_id === 1);
     if (!adminUser) {
       // If database has no admin record yet, accept default admin credentials and ensure it exists
@@ -462,10 +533,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const loginAsGuru = (fullName: string) => {
+    setSessionTimeoutReason(null);
+    lastActivityRef.current = Date.now();
     const trimmed = fullName.trim().toLowerCase();
-    const teacherUser = users.find(
-      (u) => u.role_id === 2 && u.full_name.toLowerCase().includes(trimmed)
-    );
+    if (!trimmed) return false;
+
+    // Search for teacher in master data with role_id === 2
+    const teacherUser = users.find((u) => {
+      if (u.role_id !== 2) return false;
+      const targetName = u.full_name.trim().toLowerCase();
+      const baseName = targetName.split('(')[0].trim();
+      return targetName === trimmed || baseName === trimmed || targetName.includes(trimmed);
+    });
+
     if (teacherUser) {
       setCurrentUser(teacherUser);
       setActivePage('pleno');
@@ -475,6 +555,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const loginAsPetugas = (username: string, password: string, expectedRole: 'seleksi' | 'pemilihan') => {
+    setSessionTimeoutReason(null);
+    lastActivityRef.current = Date.now();
     const targetRoleId = expectedRole === 'seleksi' ? 3 : 4;
     const user = users.find(
       (u) => u.role_id === targetRoleId && u.username?.toLowerCase() === username.trim().toLowerCase()
@@ -489,6 +571,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const logout = () => {
     setCurrentUser(null);
+    setSessionTimeoutReason(null);
+    localStorage.removeItem(STORAGE_PREFIX + 'currentUser');
   };
 
   const quickSwitchRole = (role: UserRole) => {
@@ -1048,6 +1132,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         loginAsPetugas,
         logout,
         quickSwitchRole,
+        sessionTimeoutReason,
+        clearSessionTimeoutReason,
         getStudentById,
         getClassById,
         getTopCandidatesPerRombel,

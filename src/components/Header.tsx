@@ -1,10 +1,11 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { PageView } from '../types/database';
-import { RotateCcw, Database, PanelLeft, Menu } from 'lucide-react';
+import { RotateCcw, Database, PanelLeft, Menu, LogOut } from 'lucide-react';
 
 export const Header: React.FC = () => {
   const {
+    currentUser,
     activePage,
     currentRole,
     resetAllData,
@@ -12,6 +13,7 @@ export const Header: React.FC = () => {
     setIsSupabaseModalOpen,
     isSidebarCollapsed,
     toggleSidebar,
+    logout,
   } = useApp();
 
   const getPageTitle = (page: PageView) => {
@@ -139,6 +141,20 @@ export const Header: React.FC = () => {
             <span className="hidden sm:inline">Sinkron DB</span>
           </button>
         )}
+
+        {/* Beralih Akun Button */}
+        <button
+          onClick={() => {
+            if (confirm('Apakah Anda yakin ingin mengakhiri sesi dan beralih akun?')) {
+              logout();
+            }
+          }}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 hover:text-rose-800 border border-rose-200 rounded-lg transition-colors shadow-2xs"
+          title="Akhiri sesi dan beralih akun"
+        >
+          <LogOut className="w-3.5 h-3.5 text-rose-600" />
+          <span className="hidden sm:inline">Beralih Akun</span>
+        </button>
       </div>
     </header>
   );

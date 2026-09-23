@@ -235,7 +235,7 @@ export const SeleksiView: React.FC = () => {
                   type="text"
                   value={voterSearch}
                   onChange={(e) => setVoterSearch(e.target.value)}
-                  placeholder="Ketik nama siswa untuk mempersempit daftar..."
+                  placeholder="Cari nama santri / calon pemilih..."
                   className="w-full text-xs bg-white text-slate-900 pl-9 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none mb-2"
                 />
               </div>

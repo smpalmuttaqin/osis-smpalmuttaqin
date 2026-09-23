@@ -364,7 +364,7 @@ export const BilikSuaraView: React.FC = () => {
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Ketik nama siswa..."
+                placeholder="Cari nama santri..."
                 className="w-full text-xs bg-white text-slate-900 pl-9 pr-3 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:outline-none"
               />
             </div>

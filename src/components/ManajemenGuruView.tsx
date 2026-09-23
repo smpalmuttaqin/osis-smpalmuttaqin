@@ -70,13 +70,6 @@ export const ManajemenGuruView: React.FC = () => {
     }
   };
 
-  const handleQuickLogin = (teacher: User) => {
-    const success = loginAsGuru(teacher.full_name);
-    if (!success) {
-      alert('Gagal melakukan login otomatis.');
-    }
-  };
-
   // Check how many teachers have participated in pleno
   const participatingTeacherIds = new Set(plenoEvaluations.map((pe) => pe.teacher_user_id));
 
@@ -159,7 +152,7 @@ export const ManajemenGuruView: React.FC = () => {
                 placeholder="Contoh: Ustadz M. Ridwan, M.Pd."
               />
               <p className="text-[11px] text-slate-400 mt-1">
-                Nama ini yang akan diketik/dipilih oleh guru saat masuk ke sistem.
+                Nama resmi ini yang digunakan oleh Dewan Guru saat proses autentikasi masuk ke sistem.
               </p>
             </div>
 
@@ -385,14 +378,6 @@ export const ManajemenGuruView: React.FC = () => {
                       </td>
                       <td className="px-5 py-3 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          <button
-                            onClick={() => handleQuickLogin(teacher)}
-                            title="Simulasi Masuk sebagai Guru Ini ke Pleno"
-                            className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-md transition-colors font-medium border border-emerald-200"
-                          >
-                            <LogIn className="w-3 h-3" />
-                            <span>Simulasi Masuk</span>
-                          </button>
                           <button
                             onClick={() => {
                               setEditingTeacher(teacher);
